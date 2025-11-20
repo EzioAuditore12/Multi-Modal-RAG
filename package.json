@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "Real-Time-Collabration",
   "private": true,
   "scripts": {
     "build": "turbo run build",
