@@ -1,0 +1,14 @@
+# Ignore everything in public/temp except .gitkeep
+public/temp/*
+!public/temp/.gitkeep
+
+# Ignore everything in public/logs except .gitkeep
+public/logs/*
+!public/logs/.gitkeep
+# Environment Variables
+.env
+
+# Builds
+dist
+node_modules
+
