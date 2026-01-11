@@ -1,6 +1,0 @@
-services:
-  redis:
-    image: redis
-    container_name: knozichat-redis-container
-    ports:
-      - '6379:6379'

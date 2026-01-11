@@ -1,4 +1,4 @@
-import { compare, genSalt, hash } from 'bcrypt';
+import { hash, verify } from "@node-rs/argon2";
 
 /**
  * Converts hash for the given input password
@@ -6,8 +6,7 @@ import { compare, genSalt, hash } from 'bcrypt';
  * @returns - returns the generated hashed password
  */
 export async function generateHashedPassword(password: string) {
-  const salt = await genSalt();
-  return await hash(password, salt);
+  return await hash(password);
 }
 
 /**
@@ -18,7 +17,7 @@ export async function generateHashedPassword(password: string) {
  */
 export async function validatePassword(
   passwordInput: string,
-  passwordStored: string,
+  passwordStored: string
 ): Promise<boolean> {
-  return await compare(passwordInput, passwordStored);
+  return await verify(passwordStored, passwordInput);
 }

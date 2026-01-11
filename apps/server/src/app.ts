@@ -1,21 +1,9 @@
-import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { configureOpenAPI } from './lib/configure-openapi';
-import { createApp } from './lib/create-app';
-import { errorHandler } from './middleware/error-handler';
+import { createApp } from "./lib/create-app";
 
-const registry = new OpenAPIRegistry();
+import router from "./routes/index.route";
+
 const app = createApp();
 
-import indexRoute from './routes/index.route';
-import { createAuthRoutes } from './routes/auth';
-import { createProtectedRoutes } from './routes/app/protected';
-
-app.use(indexRoute);
-app.use(createAuthRoutes(registry));
-app.use(createProtectedRoutes(registry));
-
-configureOpenAPI(app, registry);
-
-app.use(errorHandler);
+app.use(router);
 
 export default app;

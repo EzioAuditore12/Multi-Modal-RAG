@@ -1,10 +1,8 @@
-import { createRouter } from '@/lib/create-app';
-import { rateLimiter } from '@/middleware/rate-limiter';
+import { indexController } from "@/controllers/index.controller";
+import { Router } from "express";
 
-const indexRoute = createRouter();
+const router = Router();
 
-indexRoute.get('/', rateLimiter, (_, res) => {
-  res.send('Hello World!');
-});
+router.route("/").get(indexController);
 
-export default indexRoute;
+export default router;
