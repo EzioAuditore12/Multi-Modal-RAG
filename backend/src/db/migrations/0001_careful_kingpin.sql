@@ -1,0 +1,1 @@
+ALTER TABLE "blacklisted_refresh_token" RENAME TO "blacklist_refresh_token";
