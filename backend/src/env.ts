@@ -27,6 +27,8 @@ const envSchema = z.object({
 
   REFRESH_SECRET_KEY: z.string(),
   REFRESH_EXPIRATION_DURATION: z.string().default("15m"),
+
+  GOOGLE_API_KEY: z.string(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -12,6 +12,7 @@ import requestLogger from "@/middlewares/request-logger";
 
 import { env } from "@/env";
 import { authRouter } from "./routers/auth.router";
+import { aiRouter } from "./routers/ai.router";
 
 const app: Express = express();
 
@@ -43,8 +44,9 @@ app.use(requestLogger);
 
 // Routes
 app.use("/health-check", healthCheckRouter);
-app.use("/users", userRouter);
+app.use("/user", userRouter);
 app.use(authRouter);
+app.use("/ai", aiRouter);
 
 // Swagger UI
 app.use(openAPIRouter);

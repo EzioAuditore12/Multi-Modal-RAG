@@ -23,6 +23,9 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.3",
+    "@langchain/core": "^1.1.32",
+    "@langchain/google": "^0.1.6",
+    "@langchain/langgraph": "^1.2.2",
     "@node-rs/argon2": "^2.0.2",
     "@scalar/express-api-reference": "^0.9.2",
     "cors": "^2.8.6",
@@ -42,7 +45,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^7.7.0",
+    "@antfu/eslint-config": "^7.7.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/pg": "^8.18.0",
