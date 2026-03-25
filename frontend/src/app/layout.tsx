@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
+
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { ThemeProvider } from '@/components/theme-provider';
+
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { ReactQueryClientProvider } from '@/lib/react-query/provider';
@@ -27,9 +31,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn('font-sans', inter.variable)}>
+    <html lang="en" className={cn('font-sans', inter.variable)} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ReactQueryClientProvider>{children}</ReactQueryClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange>
+          <TooltipProvider>
+            <ReactQueryClientProvider>{children}</ReactQueryClientProvider>
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

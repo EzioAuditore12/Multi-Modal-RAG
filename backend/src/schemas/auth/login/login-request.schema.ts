@@ -1,7 +1,7 @@
-import { z } from "zod";
-import type { ValidatedRequest } from "express-zod-safe";
+import { z } from 'zod';
+import type { ValidatedRequest } from 'express-zod-safe';
 
-import { selectUserSchema } from "@/db/models/user.model";
+import { selectUserSchema } from '@/db/models/user.model';
 
 export const loginRequestSchema = selectUserSchema.pick({
   email: true,

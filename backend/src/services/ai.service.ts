@@ -1,21 +1,22 @@
-import { googleLlmModel } from "@/ai/models/google.model";
-import { tools } from "@/ai/tools";
 //@ts-ignore
-import { ToolNode } from "@langchain/langgraph/prebuilt";
-
+import { ToolNode } from '@langchain/langgraph/prebuilt';
 import {
   ConditionalEdgeRouter,
-  GraphNode,
-  MessagesAnnotation,
+  type GraphNode,
+  type MessagesAnnotation,
   MessagesValue,
   StateGraph,
   StateSchema,
-} from "@langchain/langgraph";
-import {
-  SystemMessage,
-  ToolMessage,
-  AIMessage,
-} from "@langchain/core/messages";
+} from '@langchain/langgraph';
+import { SystemMessage, AIMessage } from '@langchain/core/messages';
+
+import { googleLlmModel } from '@/ai/models/google.model';
+import { tools } from '@/ai/tools';
+
+function extractJsonFromMarkdown(text: string): string {
+  const match = text.match(/```json\s*([\s\S]*?)```/i);
+  return match ? match[1] : text;
+}
 
 export class AiService {
   private readonly googleLlmModel = googleLlmModel;
@@ -27,31 +28,33 @@ export class AiService {
   async test() {
     return await this.googleLlmModel.invoke([
       [
-        "system",
-        "You are a helpful assistant that translates English to French. Translate the user sentence.",
+        'system',
+        'You are a helpful assistant that translates English to French. Translate the user sentence.',
       ],
-      ["human", "I love programming."],
+      ['human', 'I love programming.'],
     ]);
   }
 
   public agentBuilder = () => {
     return new StateGraph(this.state)
-      .addNode("llmCall", this.llmCall)
-      .addNode("toolNode", this.toolNode)
-      .addEdge("__start__", "llmCall")
-      .addConditionalEdges("llmCall", this.shouldContinue, [
-        "toolNode",
-        "__end__",
+      .addNode('llmCall', this.llmCall)
+      .addNode('toolNode', this.toolNode)
+      .addEdge('__start__', 'llmCall')
+      .addConditionalEdges('llmCall', this.shouldContinue, [
+        'toolNode',
+        '__end__',
       ])
-      .addEdge("toolNode", "llmCall")
+      .addEdge('toolNode', 'llmCall')
       .compile();
   };
 
-  private llmCall: GraphNode<typeof this.state> = async (state) => {
+  private llmCall: GraphNode<typeof MessagesAnnotation.State> = async (
+    state,
+  ) => {
     const result = await this.googleLlmModelWithTools.invoke([
       new SystemMessage({
         content:
-          "You are a helpful assistant tasked with performing a arthimetic set of inputs",
+          'You are a helpful assistant tasked with performing a arthimetic set of inputs',
       }),
       ...state.messages,
     ]);
@@ -63,18 +66,17 @@ export class AiService {
 
   private toolNode = new ToolNode(tools);
 
-  private shouldContinue: ConditionalEdgeRouter<typeof this.state> = (
-    state,
-  ) => {
+  private shouldContinue: ConditionalEdgeRouter<
+    typeof MessagesAnnotation.State
+  > = (state) => {
     const messages = state.messages;
     const lastMessage = messages.at(-1);
 
-    // If the LLM makes a tool call, then perform an action
     if (lastMessage instanceof AIMessage && lastMessage.tool_calls?.length) {
-      return "toolNode";
+      return 'toolNode';
     }
-    // Otherwise, we stop (reply to the user)
-    return "__end__";
+
+    return '__end__';
   };
 }
 

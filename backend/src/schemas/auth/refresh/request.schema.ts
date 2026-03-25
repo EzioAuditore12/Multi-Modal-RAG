@@ -1,5 +1,5 @@
-import { z } from "zod";
-import type { ValidatedRequest } from "express-zod-safe";
+import { z } from 'zod';
+import type { ValidatedRequest } from 'express-zod-safe';
 
 export const refreshRequestSchema = z.object({
   refreshToken: z.jwt(),

@@ -1,75 +1,137 @@
-'use client';
+import { Fragment } from 'react/jsx-runtime';
+import {
+  CalendarDaysIcon,
+  GiftIcon,
+  MoreHorizontalIcon,
+  PhoneIcon,
+  PlusIcon,
+  SearchIcon,
+  SquareChevronRightIcon,
+  VideoIcon,
+} from 'lucide-react';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
+import { Chat } from '@/components/chat/chat';
+import {
+  ChatHeader,
+  ChatHeaderAddon,
+  ChatHeaderAvatar,
+  ChatHeaderButton,
+  ChatHeaderMain,
+} from '@/components/chat/chat-header';
+import {
+  ChatToolbar,
+  ChatToolbarAddon,
+  ChatToolbarButton,
+  ChatToolbarTextarea,
+} from '@/components/chat/chat-toolbar';
+import { ChatMessages } from '@/components/chat/chat-messages';
+import { MESSAGES } from '@/data/examples/messages';
+import { PrimaryMessage } from '@/components/examples/primary-message';
+import { DateItem } from '@/components/examples/date-item';
+import { AdditionalMessage } from '@/components/examples/additional-message';
 
-import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/store/auth';
-
-import Image from 'next/image';
-
-export default function Home() {
-  const { user, logout } = useAuthStore((state) => state);
-
+export default function ChatBasicPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between bg-white px-16 py-32 sm:items-start dark:bg-black">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl leading-10 font-semibold tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50">
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50">
-              Learning
-            </a>{' '}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="bg-foreground text-background flex h-12 w-full items-center justify-center gap-2 rounded-full px-5 transition-colors hover:bg-[#383838] md:w-39.5 dark:hover:bg-[#ccc]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer">
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/8 px-5 transition-colors hover:border-transparent hover:bg-black/4 md:w-39.5 dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer">
-            Documentation
-          </a>
-        </div>
-        <Button
-          onClick={() => {
-            console.log(user, typeof user);
-          }}>
-          Get User
-        </Button>
-        <Button onClick={() => logout()}>Remove User</Button>
-      </main>
-    </div>
+    <Chat className="flex flex-1">
+      <ChatHeader className="border-b">
+        <ChatHeaderAddon>
+          <ChatHeaderAvatar
+            src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/upstream_20.png"
+            alt="@annsmith"
+            fallback="AS"
+          />
+        </ChatHeaderAddon>
+        <ChatHeaderMain>
+          <span className="font-medium">Ann Smith</span>
+          <span className="text-sm font-semibold">AKA</span>
+          <span className="grid flex-1">
+            <span className="truncate text-sm font-medium">Front-end developer</span>
+          </span>
+        </ChatHeaderMain>
+        <ChatHeaderAddon>
+          <InputGroup className="hidden @2xl/chat:flex">
+            <InputGroupInput placeholder="Search..." />
+            <InputGroupAddon>
+              <SearchIcon />
+            </InputGroupAddon>
+          </InputGroup>
+          <ChatHeaderButton className="hidden @2xl/chat:inline-flex">
+            <PhoneIcon />
+          </ChatHeaderButton>
+          <ChatHeaderButton className="hidden @2xl/chat:inline-flex">
+            <VideoIcon />
+          </ChatHeaderButton>
+          <ChatHeaderButton>
+            <MoreHorizontalIcon />
+          </ChatHeaderButton>
+        </ChatHeaderAddon>
+      </ChatHeader>
+
+      <ChatMessages className="scrollbar-hidden">
+        {MESSAGES.map((msg, i, msgs) => {
+          // If date changed, show date item
+          if (
+            new Date(msg.timestamp).toDateString() !==
+            new Date(msgs[i + 1]?.timestamp).toDateString()
+          ) {
+            return (
+              <Fragment key={msg.id}>
+                <PrimaryMessage
+                  avatarSrc={msg.sender.avatarUrl}
+                  avatarAlt={msg.sender.username}
+                  avatarFallback={msg.sender.name.slice(0, 2)}
+                  senderName={msg.sender.name}
+                  content={msg.content}
+                  timestamp={msg.timestamp}
+                />
+                <DateItem timestamp={msg.timestamp} className="my-4" />
+              </Fragment>
+            );
+          }
+
+          // If next item is same user, show additional
+          if (msg.sender.id === msgs[i + 1]?.sender.id) {
+            return (
+              <AdditionalMessage key={msg.id} content={msg.content} timestamp={msg.timestamp} />
+            );
+          }
+          // Else, show primary
+          else {
+            return (
+              <PrimaryMessage
+                className="mt-4"
+                key={msg.id}
+                avatarSrc={msg.sender.avatarUrl}
+                avatarAlt={msg.sender.username}
+                avatarFallback={msg.sender.name.slice(0, 2)}
+                senderName={msg.sender.name}
+                content={msg.content}
+                timestamp={msg.timestamp}
+              />
+            );
+          }
+        })}
+      </ChatMessages>
+
+      <ChatToolbar>
+        <ChatToolbarAddon align="inline-start">
+          <ChatToolbarButton>
+            <PlusIcon />
+          </ChatToolbarButton>
+        </ChatToolbarAddon>
+        <ChatToolbarTextarea />
+        <ChatToolbarAddon align="inline-end">
+          <ChatToolbarButton>
+            <GiftIcon />
+          </ChatToolbarButton>
+          <ChatToolbarButton>
+            <CalendarDaysIcon />
+          </ChatToolbarButton>
+          <ChatToolbarButton>
+            <SquareChevronRightIcon />
+          </ChatToolbarButton>
+        </ChatToolbarAddon>
+      </ChatToolbar>
+    </Chat>
   );
 }

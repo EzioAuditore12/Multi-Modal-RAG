@@ -1,24 +1,24 @@
-import { pgTable, uuid, varchar, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, timestamp } from 'drizzle-orm/pg-core';
 import {
   createInsertSchema,
   createSelectSchema,
   createUpdateSchema,
-} from "drizzle-zod";
-import { z } from "zod";
-import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+} from 'drizzle-zod';
+import { z } from 'zod';
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 
 extendZodWithOpenApi(z);
 
-export const USER_TABLE_NAME = "user";
+export const USER_TABLE_NAME = 'user';
 
 export const userTable = pgTable(USER_TABLE_NAME, {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name", { length: 50 }).notNull(),
-  email: varchar("email", { length: 240 }).unique().notNull(),
-  password: text("password").notNull(),
-  avatar: text("avatar"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 50 }).notNull(),
+  email: varchar('email', { length: 240 }).unique().notNull(),
+  password: text('password').notNull(),
+  avatar: text('avatar'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
     .$onUpdate(() => new Date())
     .notNull(),
 });

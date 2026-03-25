@@ -1,7 +1,7 @@
-import { StatusCodes } from "http-status-codes";
-import type { z } from "zod";
+import { StatusCodes } from 'http-status-codes';
+import type { z } from 'zod';
 
-import { ServiceResponseSchema } from "@/utils/service-response";
+import { ServiceResponseSchema } from '@/utils/service-response';
 
 export function createApiResponse(
   schema: z.ZodTypeAny,
@@ -12,7 +12,7 @@ export function createApiResponse(
     [statusCode]: {
       description,
       content: {
-        "application/json": {
+        'application/json': {
           schema: ServiceResponseSchema(schema),
         },
       },

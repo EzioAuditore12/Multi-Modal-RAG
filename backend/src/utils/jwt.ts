@@ -1,6 +1,6 @@
-import * as jose from "jose";
+import * as jose from 'jose';
 
-import { env } from "@/env";
+import { env } from '@/env';
 
 export interface DecodedTokenResponse {
   sub: string;
@@ -30,7 +30,7 @@ export class Jwt {
 
   public async generateAccessToken(sub: string): Promise<string> {
     return await new jose.SignJWT({ sub })
-      .setProtectedHeader({ alg: "HS256" })
+      .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt(new Date())
       .setExpirationTime(this.accessExpireDuration)
       .sign(this.accessSecret);
@@ -38,7 +38,7 @@ export class Jwt {
 
   public async generateRefreshToken(sub: string): Promise<string> {
     return await new jose.SignJWT({ sub })
-      .setProtectedHeader({ alg: "HS256" })
+      .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt(new Date())
       .setExpirationTime(this.refreshExpireDuration)
       .sign(this.refreshSecret);

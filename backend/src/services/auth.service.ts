@@ -2,20 +2,20 @@ import {
   ConflictError,
   NotFoundError,
   UnauthenticatedError,
-} from "express-error-toolkit";
+} from 'express-error-toolkit';
 
-import { db } from "@/db";
-import { blackListedRefreshTokenTable } from "@/db/models/blacklist-refresh-token.model";
-import { userService } from "./user.service";
-import { cryptoPassword } from "@/utils/crypto-password";
-import { RegisterResponse } from "@/schemas/auth/register/register-response.schema";
-import { RegisterRequest } from "@/schemas/auth/register/register-request.schema";
-import { ServiceResponse } from "@/utils/service-response";
-import { jwt } from "@/utils/jwt";
-import { publicUserSchema } from "@/db/models/user.model";
-import { LoginRequest } from "@/schemas/auth/login/login-request.schema";
-import { LoginResponse } from "@/schemas/auth/login/login-response.schema";
-import { Tokens } from "@/schemas/auth/token.schema";
+import { db } from '@/db';
+import { blackListedRefreshTokenTable } from '@/db/models/blacklist-refresh-token.model';
+import { userService } from './user.service';
+import { cryptoPassword } from '@/utils/crypto-password';
+import { RegisterResponse } from '@/schemas/auth/register/register-response.schema';
+import { RegisterRequest } from '@/schemas/auth/register/register-request.schema';
+import { ServiceResponse } from '@/utils/service-response';
+import { jwt } from '@/utils/jwt';
+import { publicUserSchema } from '@/db/models/user.model';
+import { LoginRequest } from '@/schemas/auth/login/login-request.schema';
+import { LoginResponse } from '@/schemas/auth/login/login-response.schema';
+import { Tokens } from '@/schemas/auth/token.schema';
 
 export class AuthService {
   private readonly database = db;
@@ -34,7 +34,7 @@ export class AuthService {
     const isExistingUser = await this.userService.findByEmail(email);
 
     if (isExistingUser)
-      throw new ConflictError("User with this email already exists");
+      throw new ConflictError('User with this email already exists');
 
     const hashedPassword =
       await this.cryptoPassword.generateHashedPassword(password);
@@ -62,7 +62,7 @@ export class AuthService {
     const existingUser = await this.userService.findByEmail(email);
 
     if (!existingUser)
-      throw new NotFoundError("User with this email address does not exist");
+      throw new NotFoundError('User with this email address does not exist');
 
     const isPasswordValid = await this.cryptoPassword.validatePassword(
       password,
@@ -71,7 +71,7 @@ export class AuthService {
 
     if (!isPasswordValid)
       throw new UnauthenticatedError(
-        "Either entered email or password is wrong",
+        'Either entered email or password is wrong',
       );
 
     const tokens = await this.jwtService.generateAuthTokens(existingUser.id);
@@ -88,12 +88,12 @@ export class AuthService {
     const isBlacklistedToken = await this.isBlacklistedRefreshToken(token);
 
     if (isBlacklistedToken)
-      throw new UnauthenticatedError("Given token is blacklisted");
+      throw new UnauthenticatedError('Given token is blacklisted');
 
     const tokenDetails = await this.jwtService.parseRefreshToken(token);
 
     if (!tokenDetails)
-      throw new UnauthenticatedError("Given token is not valid");
+      throw new UnauthenticatedError('Given token is not valid');
 
     await this.insertBlaclistedRefreshToken({
       token,

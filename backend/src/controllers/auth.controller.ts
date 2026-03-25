@@ -1,10 +1,10 @@
-import type { RequestHandler, Response } from "express";
-import { StatusCodes } from "http-status-codes";
+import type { RequestHandler, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 
-import { LoginRequestBody } from "@/schemas/auth/login/login-request.schema";
-import { RefreshRequestBody } from "@/schemas/auth/refresh/request.schema";
-import { RegisterRequestBody } from "@/schemas/auth/register/register-request.schema";
-import { authService } from "@/services/auth.service";
+import { LoginRequestBody } from '@/schemas/auth/login/login-request.schema';
+import { RefreshRequestBody } from '@/schemas/auth/refresh/request.schema';
+import { RegisterRequestBody } from '@/schemas/auth/register/register-request.schema';
+import { authService } from '@/services/auth.service';
 
 export class AuthController {
   private readonly authService = authService;

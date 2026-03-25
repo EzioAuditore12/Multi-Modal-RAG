@@ -1,9 +1,9 @@
-import type { Request, RequestHandler, Response } from "express";
-import { StatusCodes } from "http-status-codes";
+import type { Request, RequestHandler, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 
-import { userService } from "@/services/user.service";
-import { NotFoundError } from "express-error-toolkit";
-import { publicUserSchema } from "@/db/models/user.model";
+import { userService } from '@/services/user.service';
+import { NotFoundError } from 'express-error-toolkit';
+import { publicUserSchema } from '@/db/models/user.model';
 
 class UserController {
   private readonly userSerice = userService;
@@ -20,7 +20,7 @@ class UserController {
     const userDetails = await this.userSerice.findOne(userId);
 
     if (!userDetails)
-      throw new NotFoundError("Given user with this id not found");
+      throw new NotFoundError('Given user with this id not found');
 
     const result = publicUserSchema.strip().parse(userDetails);
 
