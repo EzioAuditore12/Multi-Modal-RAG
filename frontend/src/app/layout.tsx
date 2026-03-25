@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { ReactQueryClientProvider } from '@/lib/react-query/provider';
+import { PowerSyncDatabaseProvider } from '@/db';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -39,7 +40,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange>
           <TooltipProvider>
-            <ReactQueryClientProvider>{children}</ReactQueryClientProvider>
+            <PowerSyncDatabaseProvider>
+              <ReactQueryClientProvider>{children}</ReactQueryClientProvider>
+            </PowerSyncDatabaseProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>
