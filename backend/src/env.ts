@@ -32,12 +32,10 @@ const envSchema = z.object({
 
   TAVILY_API_KEY: z.string(),
 
-  REDIS_URL: z.string(),
+  CLOUDINARY_API_KEY: z.string(),
 
-  LANGSMITH_TRACING: z.coerce.boolean(),
-  LANGSMITH_ENDPOINT: z.url(),
-  LANGSMITH_API_KEY: z.string(),
-  LANGSMITH_PROJECT: z.string(),
+  UNSTRUCTURED_API_KEY: z.string(),
+  UNSTRUCTURED_API_ENDPOINT: z.url(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
