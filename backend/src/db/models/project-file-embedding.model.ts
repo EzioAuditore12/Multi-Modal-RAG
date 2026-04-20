@@ -5,6 +5,7 @@ import {
   text,
   index,
   timestamp,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import {
   createInsertSchema,
@@ -12,6 +13,9 @@ import {
   createUpdateSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+
+extendZodWithOpenApi(z);
 
 import { projectFileTable } from './project-file.table';
 
@@ -25,9 +29,11 @@ export const projectFileEmbeddingTable = pgTable(
       .references(() => projectFileTable.id, { onDelete: 'cascade' }),
     embedding: vector('embedding', { dimensions: 1536 }).notNull(),
     content: text('content').notNull(),
-    metaData: text('meta_data'),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').$onUpdateFn(() => new Date()),
+    metaData: jsonb('meta_data'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdateFn(() => new Date())
+      .notNull(),
   },
   (t) => [
     index('embedding_index').using('hnsw', t.embedding.op('vector_cosine_ops')),

@@ -12,6 +12,9 @@ import {
   createUpdateSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+
+extendZodWithOpenApi(z);
 
 import { projectTable } from './project.model';
 
@@ -29,8 +32,10 @@ export const chatTable = pgTable(
       .references(() => projectTable.id, { onDelete: 'cascade' })
       .notNull(),
     title: varchar('title', { length: 100 }).notNull(),
-    createdAt: timestamp().defaultNow(),
-    updatedAt: timestamp().$onUpdateFn(() => new Date()),
+    createdAt: timestamp().defaultNow().notNull(),
+    updatedAt: timestamp()
+      .$onUpdateFn(() => new Date())
+      .notNull(),
   },
   (t) => [index('chat_project_id_idx').on(t.projectId)],
 );

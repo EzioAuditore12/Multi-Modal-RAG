@@ -5,6 +5,9 @@ import {
   createUpdateSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+
+extendZodWithOpenApi(z);
 
 import { userTable } from './user.model';
 
@@ -17,16 +20,26 @@ export const projectTable = pgTable(
     userId: uuid('user_id')
       .references(() => userTable.id, { onDelete: 'cascade' })
       .notNull(),
-    name: varchar('name', { length: 60 }).notNull(),
-    description: varchar('description', { length: 240 }),
-    createdAt: timestamp().defaultNow(),
-    updatedAt: timestamp().$onUpdateFn(() => new Date()),
+    name: varchar('name', { length: 30 }).notNull(),
+    description: varchar('description', { length: 100 }),
+    createdAt: timestamp().defaultNow().notNull(),
+    updatedAt: timestamp()
+      .$onUpdateFn(() => new Date())
+      .notNull(),
   },
   (t) => [index('project_user_id_idx').on(t.userId)],
 );
 
-export const projectSchema = createSelectSchema(projectTable);
-export const projectInsertSchema = createInsertSchema(projectTable);
+export const projectSchema = createSelectSchema(projectTable, {
+  id: z.uuid(),
+  userId: z.uuid(),
+  description: z.string().length(100).nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+export const projectInsertSchema = createInsertSchema(projectTable, {
+  name: z.string().nonempty().max(30),
+});
 export const projectUpdateSchema = createUpdateSchema(projectTable);
 
 export type Project = z.infer<typeof projectSchema>;

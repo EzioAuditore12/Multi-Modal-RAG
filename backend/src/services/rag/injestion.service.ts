@@ -1,15 +1,9 @@
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 
-import { HumanMessage } from 'langchain';
+import { Document, HumanMessage } from 'langchain';
 
-import {
-  googleDocumentEmbeddingModel,
-  googleLlmModel,
-} from '@/ai/models/google.model';
-import { db } from '@/db';
-
-import { userService } from '../user.service';
+import { googleLlmModel } from '@/ai/models/google.model';
 
 import {
   ChunkingStrategy,
@@ -33,17 +27,16 @@ type ContentData = {
 
 export class RagIngestionService {
   private readonly llmModel = googleLlmModel;
-  private readonly documentEmbeddingModel = googleDocumentEmbeddingModel;
 
   private readonly unstructuredClient = unstructuredClient;
-
-  private readonly database = db;
-
-  private readonly userService = userService;
 
   public async processDocuments(filePath: string) {
     const chunks =
       await this.partitianDocumentAndSplitInChunksByTitle(filePath);
+
+    const documents = await this.summarizeChunks(chunks as Chunk[]);
+
+    return documents;
   }
 
   private async partitianDocumentAndSplitInChunksByTitle(filePath: string) {
@@ -70,17 +63,14 @@ export class RagIngestionService {
       return response;
     } catch (error) {
       console.error(error);
-      throw new Error('Unable to process');
+      throw new Error('Unable to process the document using unstructured');
     }
   }
 
   private async summarizeChunks(chunks: Chunk[]) {
     console.log('🧠 Processing chunks with AI Summaries...');
 
-    const langchainDocuments: {
-      page_content: string;
-      metadata: { original_content: string };
-    }[] = [];
+    const langchainDocuments: Document[] = [];
 
     const totalChunks = chunks.length;
 
@@ -123,7 +113,7 @@ export class RagIngestionService {
 
       // Create LangChain Document with rich metadata
       langchainDocuments.push({
-        page_content: enhancedContent,
+        pageContent: enhancedContent,
         metadata: {
           original_content: JSON.stringify({
             raw_text: contentData.text,
@@ -133,6 +123,8 @@ export class RagIngestionService {
         },
       });
     }
+
+    return langchainDocuments;
   }
 
   private separateContentTypes(chunk: Chunk): ContentData {

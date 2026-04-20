@@ -32,7 +32,9 @@ const envSchema = z.object({
 
   TAVILY_API_KEY: z.string(),
 
+  CLOUDINARY_CLOUD_NAME: z.string(),
   CLOUDINARY_API_KEY: z.string(),
+  CLOUDINARY_API_SECRET: z.string(),
 
   UNSTRUCTURED_API_KEY: z.string(),
   UNSTRUCTURED_API_ENDPOINT: z.url(),

@@ -12,6 +12,9 @@ import {
   createSelectSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+
+extendZodWithOpenApi(z);
 
 import { projectTable } from './project.model';
 
@@ -31,7 +34,13 @@ export const projectFileTable = pgTable(PROJECT_FILE_TABLE_NAME, {
   uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
 });
 
-export const projectFileSchema = createSelectSchema(projectFileTable);
+export const projectFileSchema = createSelectSchema(projectFileTable, {
+  id: z.bigint(),
+  projectId: z.uuid(),
+  url: z.url(),
+  filename: z.string().max(255).nullable(),
+  uploadedAt: z.date(),
+});
 export const projectFileInsertSchema = createInsertSchema(projectFileTable);
 export const projectFileUpdateSchema = createUpdateSchema(projectFileTable);
 

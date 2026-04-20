@@ -13,7 +13,7 @@ export function createApiResponse(
       description,
       content: {
         'application/json': {
-          schema: ServiceResponseSchema(schema),
+          schema,
         },
       },
     },

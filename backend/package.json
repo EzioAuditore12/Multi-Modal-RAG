@@ -2,7 +2,7 @@
   "name": "ai-project",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "private": true,
   "keywords": [],
   "author": "",
@@ -17,6 +17,7 @@
     "db:pull": "pnpm exec drizzle-kit pull",
     "db:check": "pnpm exec drizzle-kit check",
     "db:up": "pnpm exec drizzle-kit up",
+    "db:studio": "pnpm drizzle-kit studio --verbose",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "format": "prettier --write \"src/**/*.{ts,tsx}\""

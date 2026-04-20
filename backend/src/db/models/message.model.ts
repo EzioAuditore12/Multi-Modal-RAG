@@ -5,6 +5,9 @@ import {
   createUpdateSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+
+extendZodWithOpenApi(z);
 
 import { chatTable } from './chat.model';
 import { messageTypeEnum } from '../enums/message-type.enum';
@@ -23,8 +26,10 @@ export const messageTable = pgTable(
       .references(() => chatTable.id, { onDelete: 'cascade' })
       .notNull(),
     type: messageTypeEnum('type').notNull(),
-    createdAt: timestamp().defaultNow(),
-    updatedAt: timestamp().$onUpdateFn(() => new Date()),
+    createdAt: timestamp().defaultNow().notNull(),
+    updatedAt: timestamp()
+      .$onUpdateFn(() => new Date())
+      .notNull(),
   },
   (t) => [index('message_chat_id_idx').on(t.chatId)],
 );

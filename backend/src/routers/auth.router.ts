@@ -6,6 +6,7 @@ import { registerRequestSchema } from '@/schemas/auth/register/register-request.
 import { registerResponseSchema } from '@/schemas/auth/register/register-response.schema';
 
 import { createApiResponse } from '@/lib/open-api/open-api-response-builder';
+import { requestBody } from '@/lib/open-api/open-api-request-builder';
 
 import { authController } from '@/controllers/auth.controller';
 import { loginRequestSchema } from '@/schemas/auth/login/login-request.schema';
@@ -21,9 +22,7 @@ authRegistry.registerPath({
   path: '/auth/register',
   tags: ['Auth'],
   request: {
-    body: {
-      content: { 'application/json': { schema: registerRequestSchema } },
-    },
+    body: requestBody(registerRequestSchema),
   },
   responses: createApiResponse(registerResponseSchema, 'Success'),
 });
@@ -39,9 +38,7 @@ authRegistry.registerPath({
   path: '/auth/login',
   tags: ['Auth'],
   request: {
-    body: {
-      content: { 'application/json': { schema: loginRequestSchema } },
-    },
+    body: requestBody(loginRequestSchema),
   },
   responses: createApiResponse(loginResponseSchema, 'Success'),
 });
@@ -57,9 +54,7 @@ authRegistry.registerPath({
   path: '/auth/refresh',
   tags: ['Auth'],
   request: {
-    body: {
-      content: { 'application/json': { schema: refreshRequestSchema } },
-    },
+    body: requestBody(refreshRequestSchema),
   },
   responses: createApiResponse(tokensSchema, 'Success'),
 });

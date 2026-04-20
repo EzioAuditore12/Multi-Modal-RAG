@@ -1,0 +1,1 @@
+ALTER TABLE "project_file_embedding" ALTER COLUMN "meta_data" SET DATA TYPE jsonb USING "meta_data"::jsonb;

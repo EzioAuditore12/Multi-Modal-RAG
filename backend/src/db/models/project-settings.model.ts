@@ -5,6 +5,9 @@ import {
   createUpdateSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+
+extendZodWithOpenApi(z);
 
 import { projectTable } from './project.model';
 
@@ -16,10 +19,12 @@ export const projectSettingTable = pgTable(PROJECT_SETTINGS_TABLE_NAME, {
   id: uuid('id')
     .primaryKey()
     .references(() => projectTable.id, { onDelete: 'cascade' }),
-  embeddingModel: varchar('embedding_model', { length: 100 }).notNull(),
-  ragStrategy: ragStrategyEnum('rag_stratergy').notNull(),
+  embeddingModel: varchar('embedding_model', { length: 100 }),
+  ragStrategy: ragStrategyEnum('rag_stratergy'),
   rerankingModel: varchar('reranking_model', { length: 100 }),
-  updatedAt: timestamp().$onUpdateFn(() => new Date()),
+  updatedAt: timestamp()
+    .$onUpdateFn(() => new Date())
+    .notNull(),
 });
 
 export const projectSettingSchema = createSelectSchema(projectSettingTable);

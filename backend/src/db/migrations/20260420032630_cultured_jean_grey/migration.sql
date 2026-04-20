@@ -1,0 +1,1 @@
+ALTER TABLE "project" ALTER COLUMN "description" SET DATA TYPE varchar(100) USING "description"::varchar(100);
