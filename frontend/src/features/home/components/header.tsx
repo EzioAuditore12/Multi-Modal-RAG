@@ -1,16 +1,11 @@
-'use client';
-
-import type { ComponentProps, PropsWithChildren, ReactNode } from 'react';
+import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/store/auth';
 import { UserAvatarMenu } from '@/features/common/components/user/account';
 
 interface HomeHeaderProps extends ComponentProps<'div'> {}
 
 export function HomeHeader({ className, ...props }: HomeHeaderProps) {
-  const { user } = useAuthStore((state) => state);
-
   return (
     <div className={cn('relative', className)} {...props}>
       <UserAvatarMenu className="absolute right-0" />

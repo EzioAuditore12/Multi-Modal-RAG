@@ -6,6 +6,7 @@ import {
   index,
   timestamp,
   jsonb,
+  uuid,
 } from 'drizzle-orm/pg-core';
 import {
   createInsertSchema,
@@ -18,6 +19,7 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 extendZodWithOpenApi(z);
 
 import { projectFileTable } from './project-file.table';
+import { SnowFlakeId } from '@/utils/snowflake';
 
 export const PROJECT_FILE_EMBEDDING_TABLE_NAME = 'project_file_embedding';
 
@@ -26,7 +28,10 @@ export const projectFileEmbeddingTable = pgTable(
   {
     id: bigint('id', { mode: 'bigint' })
       .primaryKey()
-      .references(() => projectFileTable.id, { onDelete: 'cascade' }),
+      .$defaultFn(() => new SnowFlakeId(1).generate()),
+    projectFileId: uuid('project_file_id').references(
+      () => projectFileTable.id,
+    ),
     embedding: vector('embedding', { dimensions: 1536 }).notNull(),
     content: text('content').notNull(),
     metaData: jsonb('meta_data'),
@@ -36,6 +41,7 @@ export const projectFileEmbeddingTable = pgTable(
       .notNull(),
   },
   (t) => [
+    index('project_file_embedding_project_file_id_idx').on(t.projectFileId),
     index('embedding_index').using('hnsw', t.embedding.op('vector_cosine_ops')),
   ],
 );

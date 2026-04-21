@@ -16,10 +16,7 @@ import {
   requestBody,
 } from '@/lib/open-api/open-api-request-builder';
 import { uploadProjectFileResponseSchema } from '@/schemas/project/file/response.schema';
-import {
-  projectFileEmbeddingBodySchema,
-  projectFileEmbeddingParamsSchema,
-} from '@/schemas/project/embeddings/request.schema';
+import { projectFileEmbeddingParamsSchema } from '@/schemas/project/embeddings/request.schema';
 import {
   projectFileBodySchema,
   projectFileParamsSchema,
@@ -111,7 +108,6 @@ projectRegistry.registerPath({
   tags: TAGS,
   request: {
     params: projectFileEmbeddingParamsSchema,
-    body: requestBody(projectFileEmbeddingBodySchema),
   },
   responses: createApiResponse(z.null(), 'Success'),
 });
@@ -120,7 +116,6 @@ projectRouter.post(
   '/project-file-embedding/:id',
   validate({
     params: projectFileEmbeddingParamsSchema,
-    body: projectFileEmbeddingBodySchema,
   }),
   // authMiddleware,
   projectController.createProjectFileEmbeddings,

@@ -69,6 +69,14 @@ export class ProjectController {
         userId,
       );
 
+    const existingProjectFile =
+      await this.projectService.getProjectFileById(projectId);
+
+    if (existingProjectFile) {
+      fs.rmSync(file.path);
+      throw new NotFoundError(`Project file already uploaded`);
+    }
+
     if (!existingProject) {
       fs.rmSync(file.path);
       throw new NotFoundError(
@@ -87,8 +95,7 @@ export class ProjectController {
     res: Response,
   ) => {
     const userId = req.user?.id!;
-    const { id } = req.params;
-    const { projectId } = req.body;
+    const { id: projectId } = req.params;
 
     const existingProject =
       await this.projectService.findByIdAndIsAuthenticatedUser(

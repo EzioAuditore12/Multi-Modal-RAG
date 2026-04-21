@@ -9,7 +9,8 @@ interface AuthenticatedFetchProps extends Omit<FetchProps, 'body' | 'method'> {
   url: string;
   responseStatus?: number;
   method: HttpMethods;
-  body?: object;
+  // Allow FormData to be passed
+  body?: object | FormData;
 }
 
 export const authenticatedFetch = async ({
@@ -25,15 +26,22 @@ export const authenticatedFetch = async ({
 
   if (!accessToken) throw new Error('No authentication token provided');
 
-  const authHeaders = {
-    'Content-Type': 'application/json',
+  const isFormData = body instanceof FormData;
+
+  const authHeaders: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
-    ...(headers || {}),
+    ...((headers as Record<string, string>) || {}),
   };
+
+  // Only assign application/json if it's not FormData and a content-type wasn't explicitly provided
+  if (!isFormData && !authHeaders['Content-Type']) {
+    authHeaders['Content-Type'] = 'application/json';
+  }
 
   const requestOptions = {
     method,
-    body: body ? JSON.stringify(body) : undefined,
+    // Send FormData directly, otherwise stringify
+    body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
   };
 
   const apiUrl = `${baseUrl}/${url}`;
@@ -76,7 +84,7 @@ interface TypedAuthenticatedFetchProps<
 > extends AuthenticatedFetchProps {
   method: HttpMethods;
   schema: S;
-  body?: object;
+  body?: object | FormData;
   query?: object; // Renamed from params to query
 }
 
@@ -87,7 +95,7 @@ export const authenticatedTypedFetch = async <S extends s.StandardSchemaV1>({
   responseStatus = 401,
   body,
   schema,
-  query, // Renamed from params to query
+  query,
   method,
   ...props
 }: TypedAuthenticatedFetchProps<S>): Promise<s.StandardSchemaV1.InferOutput<S>> => {
@@ -95,11 +103,17 @@ export const authenticatedTypedFetch = async <S extends s.StandardSchemaV1>({
 
   if (!accessToken) throw new Error('No authentication token provided');
 
-  let authHeaders = {
-    'Content-Type': 'application/json',
+  const isFormData = body instanceof FormData;
+
+  let authHeaders: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
-    ...(headers || {}),
+    ...((headers as Record<string, string>) || {}),
   };
+
+  // Assign application/json if it's not FormData and left unspecified
+  if (!isFormData && !authHeaders['Content-Type']) {
+    authHeaders['Content-Type'] = 'application/json';
+  }
 
   if (query !== undefined) {
     const queryString = new URLSearchParams(query as Record<string, string>).toString();
@@ -108,7 +122,8 @@ export const authenticatedTypedFetch = async <S extends s.StandardSchemaV1>({
 
   const requestOptions = {
     method,
-    body: body ? JSON.stringify(body) : undefined,
+    // Send FormData directly, otherwise stringify
+    body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
   };
 
   const apiUrl = `${baseUrl}/${url}`;
@@ -128,11 +143,7 @@ export const authenticatedTypedFetch = async <S extends s.StandardSchemaV1>({
       const newAccessToken = useAuthStore.getState().tokens?.accessToken;
 
       // 3. Update headers
-      authHeaders = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${newAccessToken}`,
-        ...(headers || {}),
-      };
+      authHeaders.Authorization = `Bearer ${newAccessToken}`;
 
       // 4. Retry request
       response = await fetch(apiUrl, {

@@ -104,8 +104,8 @@ export class ProjectService {
       const project = await transaction
         .insert(this.projectFileTable)
         .values({
-          projectId,
-          filename: uploadedFile.original_filename,
+          id: projectId,
+          fileName: uploadedFile.original_filename,
           url: uploadedFile.url,
         })
         .returning()
@@ -119,7 +119,7 @@ export class ProjectService {
     return projectFile;
   }
 
-  public async getProjectFileById(id: bigint): Promise<ProjectFile> {
+  public async getProjectFileById(id: string): Promise<ProjectFile> {
     return await this.database
       .select()
       .from(this.projectFileTable)
