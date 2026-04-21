@@ -24,6 +24,8 @@ import {
   projectFileBodySchema,
   projectFileParamsSchema,
 } from '@/schemas/project/file/request.schema';
+import { getAllProjectsSchema } from '@/schemas/project/get-all.schema';
+import { projectSchema } from '@/db/models/project.model';
 
 export const projectRegistry = new OpenAPIRegistry();
 export const projectRouter: Router = express.Router();
@@ -45,6 +47,40 @@ projectRouter.post(
   validate({ body: createProjectSchema }),
   authMiddleware,
   projectController.create,
+);
+
+projectRegistry.registerPath({
+  method: 'get',
+  path: '/project',
+  tags: TAGS,
+  request: {
+    query: getAllProjectsSchema,
+  },
+  responses: createApiResponse(projectSchema.array(), 'Success'),
+});
+
+projectRouter.get(
+  '/',
+  //@ts-ignores
+  validate({ query: getAllProjectsSchema }),
+  authMiddleware,
+  projectController.getAll,
+);
+
+projectRegistry.registerPath({
+  method: 'get',
+  path: '/project/{id}',
+  tags: TAGS,
+  request: {
+    params: z.object({ id: z.uuid() }),
+  },
+  responses: createApiResponse(projectSchema, 'Success'),
+});
+
+projectRouter.get(
+  '/:id',
+  validate({ params: z.object({ id: z.uuid() }) }),
+  projectController.getById,
 );
 
 projectRegistry.registerPath({

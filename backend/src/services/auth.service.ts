@@ -16,6 +16,7 @@ import { publicUserSchema } from '@/db/models/user.model';
 import { LoginRequest } from '@/schemas/auth/login/login-request.schema';
 import { LoginResponse } from '@/schemas/auth/login/login-response.schema';
 import { Tokens } from '@/schemas/auth/token.schema';
+import { eq } from 'drizzle-orm'; // Need to import eq
 
 export class AuthService {
   private readonly database = db;
@@ -122,8 +123,9 @@ export class AuthService {
 
   private async isBlacklistedRefreshToken(token: string): Promise<boolean> {
     const existingToken = await this.database
-      .select({ id: this.table })
+      .select({ id: this.table.id })
       .from(this.table)
+      .where(eq(this.table.refreshToken, token))
       .then((res) => (res.length > 0 ? res[0] : null));
 
     if (existingToken) return true;

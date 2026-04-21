@@ -22,7 +22,7 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'knozichat-auth',
+      name: 'ai-project-auth',
       storage: createJSONStorage(() => localStorage),
     }
   )

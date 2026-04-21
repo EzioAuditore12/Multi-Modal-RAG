@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, asc, gt, ilike } from 'drizzle-orm';
 import type { Document } from '@langchain/core/documents';
 
 import { db } from '@/db';
@@ -15,6 +15,7 @@ import { projectFileEmbeddingTable } from '@/db/models/project-file-embedding.mo
 import { uploadToCloudinary } from '@/lib/cloudinary';
 
 import { googleDocumentEmbeddingModel } from '@/ai/models/google.model';
+import { Pagination } from '@/schemas/pagination.schema';
 
 export class ProjectService {
   private readonly database = db;
@@ -47,6 +48,26 @@ export class ProjectService {
       .from(this.table)
       .where(eq(this.table.id, id))
       .then((res) => res[0] ?? undefined);
+  }
+
+  public async getProjectsOfUser(
+    userId: string,
+    pagination: Pagination,
+  ): Promise<Project[]> {
+    const { pageSize, cursor, search } = pagination;
+
+    const conditions = [eq(this.table.userId, userId)];
+
+    if (cursor) conditions.push(gt(this.table.id, cursor));
+
+    if (search) conditions.push(ilike(this.table.name, `%${search}%`));
+
+    return await this.database
+      .select()
+      .from(this.table)
+      .where(and(...conditions))
+      .orderBy(asc(this.table.id))
+      .limit(pageSize);
   }
 
   public async findByIdAndIsAuthenticatedUser(id: string, userId: string) {

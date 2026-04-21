@@ -16,7 +16,7 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { AvatarFallbackProps, AvatarImageProps, AvatarProps } from '@radix-ui/react-avatar';
+import { AvatarFallbackProps, AvatarImageProps } from '@base-ui/react/avatar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
@@ -111,7 +111,7 @@ export function ChatHeaderAddon({ children, className, ...props }: ChatHeaderAdd
   );
 }
 
-export interface ChatHeaderAvatarProps extends AvatarProps {
+export interface ChatHeaderAvatarProps extends React.ComponentProps<typeof Avatar> {
   className?: string;
   /** Image URL for the avatar. */
   src?: AvatarImageProps['src'];

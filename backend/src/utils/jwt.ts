@@ -17,7 +17,7 @@ export class Jwt {
   private readonly accessExpireDuration = env.ACCESS_EXPIRATION_DURATION;
 
   private readonly refreshSecret = toUint8Array(env.REFRESH_SECRET_KEY);
-  private readonly refreshExpireDuration = env.ACCESS_EXPIRATION_DURATION;
+  private readonly refreshExpireDuration = env.REFRESH_EXPIRATION_DURATION;
 
   public async generateAuthTokens(
     sub: string,

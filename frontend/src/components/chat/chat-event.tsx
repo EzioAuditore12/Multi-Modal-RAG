@@ -38,7 +38,7 @@
  */
 
 import { cn } from '@/lib/utils';
-import { AvatarFallbackProps, AvatarImageProps, AvatarProps } from '@radix-ui/react-avatar';
+import { AvatarFallbackProps, AvatarImageProps } from '@base-ui/react/avatar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMemo } from 'react';
 
@@ -220,7 +220,7 @@ export function ChatEventTitle({ children, className, ...props }: ChatEventTitle
   );
 }
 
-export interface ChatEventAvatarProps extends AvatarProps {
+export interface ChatEventAvatarProps extends React.ComponentProps<typeof Avatar> {
   className?: string;
   /** Image URL for the avatar. */
   src?: AvatarImageProps['src'];

@@ -10,6 +10,7 @@ import { uploadProjectFileResponseSchema } from '@/schemas/project/file/response
 import { ProjectFileEmbeddingRequest } from '@/schemas/project/embeddings/request.schema';
 import { ProjectFileRequest } from '@/schemas/project/file/request.schema';
 import { ragIngestionService } from '@/services/rag/injestion.service';
+import { GetAllProjectsRequest } from '@/schemas/project/get-all.schema';
 
 export class ProjectController {
   private readonly projectService = projectService;
@@ -37,6 +38,24 @@ export class ProjectController {
     });
 
     return res.status(StatusCodes.CREATED).send(result);
+  };
+
+  public getAll = async (req: GetAllProjectsRequest, res: Response) => {
+    const userId = req.user?.id!;
+
+    const query = req.query;
+
+    const response = await this.projectService.getProjectsOfUser(userId, query);
+
+    return res.status(StatusCodes.OK).send(response);
+  };
+
+  public getById = async (req: Request, res: Response) => {
+    const projectId = req.params.id as string;
+
+    const response = await this.projectService.findById(projectId);
+
+    return res.status(StatusCodes.OK).send(response);
   };
 
   public uploadProjectFile = async (req: ProjectFileRequest, res: Response) => {

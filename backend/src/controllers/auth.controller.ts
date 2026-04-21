@@ -33,6 +33,8 @@ export class AuthController {
   ) => {
     const result = await this.authService.refresh(_req.body.refreshToken);
 
+    console.log(result);
+
     return res.status(StatusCodes.CREATED).send(result);
   };
 }

@@ -22,7 +22,7 @@ const data = {
   projects: [
     {
       name: 'Article',
-      url: '/',
+      url: '/article',
       icon: User,
     },
     {

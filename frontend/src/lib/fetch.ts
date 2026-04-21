@@ -11,7 +11,7 @@ interface TypedFetchProps<S extends s.StandardSchemaV1> extends Omit<
   url: string;
   schema: S;
   method: HttpMethods;
-  params?: object;
+  query?: object; // Renamed from params to query
   body?: object;
 }
 
@@ -19,7 +19,7 @@ export const typedFetch = async <S extends s.StandardSchemaV1>({
   url,
   schema,
   headers,
-  params,
+  query, // Renamed from params to query
   method,
   body,
   ...props
@@ -29,10 +29,9 @@ export const typedFetch = async <S extends s.StandardSchemaV1>({
     ...headers,
   };
 
-  if (params !== undefined) {
-    const paramsValues = new URLSearchParams(params as Record<string, string>).toString();
-
-    url = url + (url.includes('?') ? '&' : '?') + paramsValues;
+  if (query !== undefined) {
+    const queryString = new URLSearchParams(query as Record<string, string>).toString();
+    url = url + (url.includes('?') ? '&' : '?') + queryString;
   }
 
   const response = await fetch(url, {
