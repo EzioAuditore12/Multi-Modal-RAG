@@ -1,6 +1,15 @@
 import fs from 'node:fs';
 
-import { and, eq, asc, gt, ilike } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  asc,
+  gt,
+  ilike,
+  cosineDistance,
+  sql,
+  desc,
+} from 'drizzle-orm';
 import type { Document } from '@langchain/core/documents';
 
 import { db } from '@/db';
@@ -11,11 +20,18 @@ import {
 } from '@/db/models/project.model';
 import { projectSettingTable } from '@/db/models/project-settings.model';
 import { ProjectFile, projectFileTable } from '@/db/models/project-file.table';
-import { projectFileEmbeddingTable } from '@/db/models/project-file-embedding.model';
+import {
+  ProjectFileEmbedding,
+  projectFileEmbeddingTable,
+} from '@/db/models/project-file-embedding.model';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 
-import { googleDocumentEmbeddingModel } from '@/ai/models/google.model';
+import {
+  googleDocumentEmbeddingModel,
+  googleQueryEmbeddingModel,
+} from '@/ai/models/google.model';
 import { Pagination } from '@/schemas/pagination.schema';
+import { aiService } from './ai.service';
 
 export class ProjectService {
   private readonly database = db;
@@ -24,7 +40,7 @@ export class ProjectService {
   private readonly projectFileTable = projectFileTable;
   private readonly projectFileEmbeddingTable = projectFileEmbeddingTable;
 
-  private readonly embeddingDocumentModel = googleDocumentEmbeddingModel;
+  private readonly aiService = aiService;
 
   public async create(insertProject: ProjectInsert): Promise<Project> {
     return await this.database.transaction(async (trx) => {
@@ -114,35 +130,57 @@ export class ProjectService {
       return project;
     });
 
-    await fs.promises.unlink(path);
-
     return projectFile;
   }
 
-  public async getProjectFileById(id: string): Promise<ProjectFile> {
+  public async getProjectFileById(
+    id: string,
+  ): Promise<ProjectFile | undefined> {
     return await this.database
       .select()
       .from(this.projectFileTable)
       .where(eq(this.projectFileTable.id, id))
-      .then((res) => res[0]);
+      .then((res) => res[0] ?? undefined);
   }
 
   public async createProjectFileEmbeddings(
-    projectFileId: bigint,
+    projectFileId: string,
     documents: Document[],
   ): Promise<void> {
     for (const doc of documents) {
-      const embedding = await this.embeddingDocumentModel.embedDocuments([
+      const embedding = await this.aiService.generateDocumentEmbedding([
         doc.pageContent,
       ]);
 
       await this.database.insert(this.projectFileEmbeddingTable).values({
-        id: projectFileId,
+        projectFileId,
         content: doc.pageContent,
         embedding: embedding[0],
         metaData: doc.metadata,
       });
     }
+  }
+
+  public async findSimiliarFromProjectFileEmbeddings(
+    projectId: string,
+    query: string,
+  ): Promise<{ content: string; metaData: unknown; similarity: number }[]> {
+    const queryEmbedding = await this.aiService.generateQueryEmbedding(query);
+
+    const similarity = sql<number>`1 - (${cosineDistance(this.projectFileEmbeddingTable.embedding, queryEmbedding)})`;
+
+    const relevantDocs = await this.database
+      .select({
+        content: this.projectFileEmbeddingTable.content,
+        metaData: this.projectFileEmbeddingTable.metaData,
+        similarity,
+      })
+      .from(this.projectFileEmbeddingTable)
+      .orderBy((t) => desc(t.similarity))
+      .where(eq(this.projectFileEmbeddingTable.projectFileId, projectId))
+      .limit(5);
+
+    return relevantDocs;
   }
 }
 

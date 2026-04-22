@@ -1,4 +1,4 @@
-import { bigint, index, pgTable, timestamp } from 'drizzle-orm/pg-core';
+import { bigint, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import {
   createSelectSchema,
   createInsertSchema,
@@ -25,6 +25,7 @@ export const messageTable = pgTable(
     chatId: bigint('chat_id', { mode: 'bigint' })
       .references(() => chatTable.id, { onDelete: 'cascade' })
       .notNull(),
+    content: text('content').notNull(),
     type: messageTypeEnum('type').notNull(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp()

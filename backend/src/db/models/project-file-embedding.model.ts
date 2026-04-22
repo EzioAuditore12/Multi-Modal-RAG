@@ -31,6 +31,7 @@ export const projectFileEmbeddingTable = pgTable(
       .$defaultFn(() => new SnowFlakeId(1).generate()),
     projectFileId: uuid('project_file_id').references(
       () => projectFileTable.id,
+      { onDelete: 'cascade' },
     ),
     embedding: vector('embedding', { dimensions: 1536 }).notNull(),
     content: text('content').notNull(),

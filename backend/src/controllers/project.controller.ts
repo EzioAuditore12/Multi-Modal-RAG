@@ -1,13 +1,11 @@
 import fs from 'node:fs';
 
-import { RequestHandler, Response, Request } from 'express';
+import { Response, Request } from 'express';
 import { ConflictError, NotFoundError } from 'express-error-toolkit';
 import { StatusCodes } from 'http-status-codes';
 
 import { CreateProjectRequest } from '@/schemas/project/create.schema';
 import { projectService } from '@/services/project.service';
-import { uploadProjectFileResponseSchema } from '@/schemas/project/file/response.schema';
-import { ProjectFileEmbeddingRequest } from '@/schemas/project/embeddings/request.schema';
 import { ProjectFileRequest } from '@/schemas/project/file/request.schema';
 import { ragIngestionService } from '@/services/rag/injestion.service';
 import { GetAllProjectsRequest } from '@/schemas/project/get-all.schema';
@@ -83,30 +81,20 @@ export class ProjectController {
         `No Project with exists or you are not authenticated to view or modify the project`,
       );
     }
-    const result = await this.projectService.createProjectFile(projectId, file);
+    const projectFile = await this.projectService.createProjectFile(
+      projectId,
+      file,
+    );
 
-    const response = uploadProjectFileResponseSchema.strip().parse(result);
+    const documents = await this.ragIngestionService.processDocuments(
+      file.path,
+    );
 
-    return res.status(StatusCodes.CREATED).send(response);
-  };
+    await this.projectService.createProjectFileEmbeddings(projectId, documents);
 
-  public createProjectFileEmbeddings = async (
-    req: ProjectFileEmbeddingRequest,
-    res: Response,
-  ) => {
-    const userId = req.user?.id!;
-    const { id: projectId } = req.params;
+    await fs.promises.unlink(file.path);
 
-    const existingProject =
-      await this.projectService.findByIdAndIsAuthenticatedUser(
-        projectId,
-        userId,
-      );
-
-    if (!existingProject)
-      throw new NotFoundError(
-        `No Project with exists or you are not authenticated to view or modify the project`,
-      );
+    return res.status(StatusCodes.CREATED).send(projectFile);
   };
 }
 

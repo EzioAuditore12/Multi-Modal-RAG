@@ -1,0 +1,1 @@
+ALTER TABLE "project_file_embedding" DROP CONSTRAINT "project_file_embedding_project_file_id_project_file_id_fkey", ADD CONSTRAINT "project_file_embedding_project_file_id_project_file_id_fkey" FOREIGN KEY ("project_file_id") REFERENCES "project_file"("id") ON DELETE CASCADE;

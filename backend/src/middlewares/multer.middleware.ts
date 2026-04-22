@@ -1,6 +1,7 @@
 import multer from 'multer';
 import crypto from 'node:crypto';
 import path from 'node:path';
+import { RequestHandler } from 'express';
 
 const DESTINATION_LOCATION = 'public';
 const FILE_SIZE = 10000000; // 10mb
@@ -21,7 +22,7 @@ const storage = multer.diskStorage({
   },
 });
 
-export const uploadSingle = multer({
+export const uploadSingle: RequestHandler = multer({
   storage: storage,
   limits: { fileSize: FILE_SIZE },
 }).single('file');

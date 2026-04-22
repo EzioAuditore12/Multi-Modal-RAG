@@ -1,4 +1,4 @@
-import cloudinary from 'cloudinary';
+import cloudinary, { AccessMode } from 'cloudinary';
 
 import { env } from '@/env';
 
@@ -11,10 +11,12 @@ cloudinary.v2.config({
 export const uploadToCloudinary = async (
   filePath: string,
   fileName?: string,
+  accessMode: AccessMode = 'public',
 ) => {
   try {
     const data = await cloudinary.v2.uploader.upload(filePath, {
       filename_override: fileName,
+      access_mode: accessMode,
     });
     return data;
   } catch (error) {

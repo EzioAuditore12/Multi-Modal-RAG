@@ -1,7 +1,7 @@
 'use client';
 
 import type { ComponentProps } from 'react';
-import { Building, Command, Map, User } from 'lucide-react';
+import { Command } from 'lucide-react';
 import Link from 'next/link';
 
 import { NavItems, type NavItem } from './nav-items';
@@ -15,57 +15,53 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
 
 import { useAuthStore } from '@/store/auth';
-import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
-const data = {
-  projects: [
-    {
-      name: 'Article',
-      url: '/',
-      icon: User,
-    },
-    {
-      name: 'Create Property',
-      url: '/',
-      icon: Map,
-    },
-    {
-      name: 'Manage Properties',
-      url: '/',
-      icon: Building,
-    },
-  ] as NavItem[],
-};
+interface ProjectSidebarProps extends ComponentProps<typeof Sidebar> {
+  data: NavItem[];
+}
 
-export function ProjectSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+export function ProjectSidebar({ className, data, ...props }: ProjectSidebarProps) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const { state } = useSidebar(); // Access sidebar state
 
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar className={cn(className)} collapsible="icon" variant="inset" {...props}>
+      {/* Set collapsible to "icon" so it partially shrinks */}
       <SidebarHeader className="flex h-16 shrink-3 items-center gap-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg">
-              {/* Make the Link a proper flex container */}
-              <Link href="/" className="flex w-full items-center gap-2">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
-                </div>
-                <div className="grid flex-1 flex-row text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
+            {/* Provide the Trigger when collapsed, otherwise show original header */}
+            {state === 'collapsed' ? (
+              <div className="flex w-full items-center justify-center pt-2">
+                <SidebarTrigger />
+              </div>
+            ) : (
+              <div className="flex w-full items-center gap-2 py-2 pr-2">
+                <SidebarMenuButton size="lg">
+                  <Link href="/" className="flex flex-1 items-center gap-2">
+                    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                      <Command className="size-4" />
+                    </div>
+                    <div className="grid flex-1 flex-row text-left text-sm leading-tight">
+                      <span className="truncate font-medium">Acme Inc</span>
+                      <span className="truncate text-xs">Enterprise</span>
+                    </div>
+                  </Link>
+                </SidebarMenuButton>
+                <SidebarTrigger />
+              </div>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavItems projects={data.projects} />
+        <NavItems projects={data} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser name={user?.name ?? ''} email={user?.email ?? ''} avatar="" logout={logout} />

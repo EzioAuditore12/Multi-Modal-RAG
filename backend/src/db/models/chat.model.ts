@@ -40,7 +40,13 @@ export const chatTable = pgTable(
   (t) => [index('chat_project_id_idx').on(t.projectId)],
 );
 
-export const chatSchema = createSelectSchema(chatTable);
+export const chatSchema = createSelectSchema(chatTable, {
+  id: z.bigint(),
+  projectId: z.uuid(),
+  title: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
 export const chatInsertSchema = createInsertSchema(chatTable);
 export const chatUpdateSchema = createUpdateSchema(chatTable);
 

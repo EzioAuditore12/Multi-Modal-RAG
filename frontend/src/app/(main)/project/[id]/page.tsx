@@ -18,7 +18,7 @@ export default function ProjectPage() {
       <H1>{data?.id}</H1>
       <H2>{data?.name}</H2>
       <UploadProjectFileForm
-        projectId={data?.id!}
+        projectId={data?.id as string}
         handleFormSubmit={mutate}
         isFormSubmitting={isPending}
       />

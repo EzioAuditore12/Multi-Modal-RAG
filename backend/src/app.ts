@@ -13,6 +13,7 @@ import helmet from '@/middlewares/helmet.middleware';
 import { env } from '@/env';
 import { authRouter } from './routers/auth.router';
 import { projectRouter } from './routers/project.router';
+import { chatRouter } from './routers/chat.router';
 
 const app: Express = express();
 
@@ -34,6 +35,7 @@ app.use('/health-check', healthCheckRouter);
 app.use('/user', userRouter);
 app.use(authRouter);
 app.use('/project', projectRouter);
+app.use('/chat', chatRouter);
 
 // Swagger UI
 app.use(openAPIRouter);
