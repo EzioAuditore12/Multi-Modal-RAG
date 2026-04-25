@@ -32,7 +32,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 // Options for the hook, parameterized by event names
 export interface ServerSideEventOptions<TEventNames extends string> {
   url: string; // SSE endpoint URL
-  options?: EventSourceOptions; // Custom options (headers, etc.)
+  // -> Add enabled flag here, defaults to true
+  enabled?: boolean;
+  options?: EventSourceOptions & { query?: Record<string, string> };
   events?: Record<TEventNames, (data: string) => void>; // Event listeners
 }
 
@@ -42,6 +44,7 @@ type EventData<TEventNames extends string> = Partial<Record<TEventNames, string>
 // Main hook, parameterized by event names for type safety
 export function useServerSideEvents<TEventNames extends string>({
   url,
+  enabled = true, // <- Default to true
   options,
   events,
 }: ServerSideEventOptions<TEventNames>) {
@@ -67,7 +70,21 @@ export function useServerSideEvents<TEventNames extends string>({
 
   // Effect to set up the EventSource and listeners
   useEffect(() => {
-    const es = new EventSource(url, options);
+    // -> Return early and do not connect if not enabled
+    if (!enabled) return;
+
+    let finalUrl = url;
+
+    // Check if query exists inside options
+    if (options?.query) {
+      const queryString = new URLSearchParams(options.query).toString();
+      finalUrl = finalUrl + (finalUrl.includes('?') ? '&' : '?') + queryString;
+    }
+
+    // Destructure to remove 'query' so we don't pass an unknown property to EventSource
+    const { query, ...esOptions } = options || {};
+
+    const es = new EventSource(finalUrl, esOptions);
     eventSourceRef.current = es;
     setConnectionError(null); // Clear any previous errors on new connection
 

@@ -1,11 +1,10 @@
 import { Response } from 'express';
-import { StatusCodes } from 'http-status-codes';
 
 import { CreateNewChatRequest } from '@/schemas/chat/new/request';
-import { CreateNewChatResponse } from '@/schemas/chat/new/response.schema';
 import { aiService } from '@/services/ai.service';
 import { chatService } from '@/services/chat.service';
 import { projectService } from '@/services/project.service';
+import { createSession } from 'better-sse';
 
 export class ChatController {
   private readonly aiService = aiService;
@@ -14,7 +13,13 @@ export class ChatController {
 
   public createNewChat = async (req: CreateNewChatRequest, res: Response) => {
     const userId = req.user?.id!;
-    const { projectId, query } = req.body;
+    const { chatId, projectId, query, messageId, isFirstTime } = req.query;
+
+    const session = await createSession(req, res);
+
+    const MESSAGE_EVENT_NAME = 'message';
+    const PROJECT_TITLE_WITH_CHAT_ID_EVENT_NAME = 'project_title_with_chat_id';
+    const FINAL_RESULT_EVENT = 'result';
 
     const isAuthenticedUserAndExisitingProject =
       await this.projectService.findByIdAndIsAuthenticatedUser(
@@ -27,20 +32,34 @@ export class ChatController {
         'Given project either not exist or is not allowed to be view by the user',
       );
 
-    const generatedTitle = await this.aiService.generateTitle(query);
+    session.push(
+      'Authentication and project existion successfully, Process Started',
+      MESSAGE_EVENT_NAME,
+    );
 
-    console.log(generatedTitle);
+    if (isFirstTime) {
+      const generatedTitle = await this.aiService.generateTitle(query);
 
-    const createdChat = await this.chatService.create({
-      projectId,
-      title: generatedTitle,
-    });
+      const createdChat = await this.chatService.create({
+        id: chatId,
+        projectId,
+        title: generatedTitle,
+      });
 
-    const insertedHumanMessage = await this.chatService.createMessage({
-      chatId: createdChat.id,
+      session.push(
+        { chatId: createdChat.id.toString(), title: createdChat.title },
+        PROJECT_TITLE_WITH_CHAT_ID_EVENT_NAME,
+      );
+    }
+
+    await this.chatService.createMessage({
+      id: messageId,
+      chatId,
       content: query,
       type: 'human',
     });
+
+    session.push('Pushing the query into human message', MESSAGE_EVENT_NAME);
 
     const relevantDocs =
       await this.projectService.findSimiliarFromProjectFileEmbeddings(
@@ -48,7 +67,10 @@ export class ChatController {
         query,
       );
 
-    console.log(relevantDocs);
+    session.push(
+      `Found 5 relevant docs ${JSON.stringify(relevantDocs.map((c) => c.content))}`,
+      MESSAGE_EVENT_NAME,
+    );
 
     const result = await this.aiService.giveResponse(
       relevantDocs.map((c) => c.content),
@@ -56,20 +78,18 @@ export class ChatController {
     );
 
     const insertedAiMessage = await this.chatService.createMessage({
-      chatId: createdChat.id,
+      chatId,
       content: result,
       type: 'ai',
     });
 
-    return res.status(StatusCodes.CREATED).send({
-      projectId,
-      chatId: createdChat.id.toString(),
-      title: createdChat.title,
-      messageIdHuman: insertedHumanMessage.id.toString(),
-      query: insertedHumanMessage.content,
-      messageIdAi: insertedAiMessage.id.toString(),
-      aiResponse: insertedAiMessage.content,
-    } as CreateNewChatResponse);
+    session.push(
+      {
+        id: insertedAiMessage.id.toString(),
+        content: insertedAiMessage.content,
+      },
+      FINAL_RESULT_EVENT,
+    );
   };
 }
 

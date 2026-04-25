@@ -10,12 +10,15 @@ import { refreshAccessToken } from './token-manager';
 
 export interface AuthServerSideEventOptions<TEventNames extends string> {
   url: string;
-  options?: EventSourceOptions;
+  // -> Pass through the enabled flag
+  enabled?: boolean;
+  options?: EventSourceOptions & { query?: Record<string, string> };
   events?: Record<TEventNames, (data: string) => void>;
 }
 
 export function useAuthenticatedServerSideEvents<TEventNames extends string>({
   url,
+  enabled = true, // <- Default to true
   options,
   events,
 }: AuthServerSideEventOptions<TEventNames>) {
@@ -35,6 +38,7 @@ export function useAuthenticatedServerSideEvents<TEventNames extends string>({
 
   const sse = useServerSideEvents<TEventNames>({
     url,
+    enabled, // <- Pass to the main hook
     options: mergedOptions,
     events,
   });
