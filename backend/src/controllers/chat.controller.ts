@@ -1,15 +1,50 @@
 import { Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import { createSession } from 'better-sse';
 
 import { CreateNewChatRequest } from '@/schemas/chat/new/request';
 import { aiService } from '@/services/ai.service';
 import { chatService } from '@/services/chat.service';
 import { projectService } from '@/services/project.service';
-import { createSession } from 'better-sse';
+import { GetProjectChatsRequest } from '@/schemas/chat/get-project-chats';
 
 export class ChatController {
   private readonly aiService = aiService;
   private readonly chatService = chatService;
   private readonly projectService = projectService;
+
+  public getChatsofProject = async (
+    req: GetProjectChatsRequest,
+    res: Response,
+  ) => {
+    const userId = req.user?.id!;
+    const { pageSize, cursor, search, projectId } = req.query;
+
+    const isAuthenticedUserAndExisitingProject =
+      await this.projectService.findByIdAndIsAuthenticatedUser(
+        projectId,
+        userId,
+      );
+
+    if (!isAuthenticedUserAndExisitingProject)
+      throw new Error(
+        'Given project either not exist or is not allowed to be view by the user',
+      );
+
+    const response = await this.chatService.getAll({
+      pageSize,
+      projectId,
+      cursor,
+      search,
+    });
+
+    return res.status(StatusCodes.OK).send(
+      response.map((c) => ({
+        ...c,
+        id: c.id.toString(),
+      })),
+    );
+  };
 
   public createNewChat = async (req: CreateNewChatRequest, res: Response) => {
     const userId = req.user?.id!;
@@ -33,63 +68,93 @@ export class ChatController {
       );
 
     session.push(
-      'Authentication and project existion successfully, Process Started',
+      'Authenticating session and validating workspace...',
       MESSAGE_EVENT_NAME,
     );
 
-    if (isFirstTime) {
-      const generatedTitle = await this.aiService.generateTitle(query);
+    try {
+      if (isFirstTime) {
+        const generatedTitle = await this.aiService.generateTitle(query);
 
-      const createdChat = await this.chatService.create({
-        id: chatId,
-        projectId,
-        title: generatedTitle,
+        const createdChat = await this.chatService.create({
+          id: chatId,
+          projectId,
+          title: generatedTitle,
+        });
+
+        // We can optionally push this to message steps too
+        session.push('Generated conversation title.', MESSAGE_EVENT_NAME);
+
+        session.push(
+          { chatId: createdChat.id.toString(), title: createdChat.title },
+          PROJECT_TITLE_WITH_CHAT_ID_EVENT_NAME,
+        );
+      }
+
+      await this.chatService.createMessage({
+        id: messageId,
+        chatId,
+        content: query,
+        type: 'human',
       });
 
       session.push(
-        { chatId: createdChat.id.toString(), title: createdChat.title },
-        PROJECT_TITLE_WITH_CHAT_ID_EVENT_NAME,
+        'Saved user query to conversation history.',
+        MESSAGE_EVENT_NAME,
       );
-    }
 
-    await this.chatService.createMessage({
-      id: messageId,
-      chatId,
-      content: query,
-      type: 'human',
-    });
+      const relevantDocs =
+        await this.projectService.findSimiliarFromProjectFileEmbeddings(
+          projectId,
+          query,
+        );
 
-    session.push('Pushing the query into human message', MESSAGE_EVENT_NAME);
+      // Give a little info limit on the docs
+      const docPreviewInfo = relevantDocs.length
+        ? ` (Sources extracted: ${relevantDocs.length * 10}0 bytes analyzed)`
+        : '';
 
-    const relevantDocs =
-      await this.projectService.findSimiliarFromProjectFileEmbeddings(
-        projectId,
+      session.push(
+        `Retrieved ${relevantDocs.length} relevant documents from the knowledge base${docPreviewInfo}.`,
+        MESSAGE_EVENT_NAME,
+      );
+
+      session.push('Synthesizing final response...', MESSAGE_EVENT_NAME);
+
+      let fullResponse = '';
+      const stream = this.aiService.streamResponse(
+        relevantDocs.map((c) => c.content),
         query,
       );
 
-    session.push(
-      `Found 5 relevant docs ${JSON.stringify(relevantDocs.map((c) => c.content))}`,
-      MESSAGE_EVENT_NAME,
-    );
+      for await (const chunk of stream) {
+        fullResponse += chunk;
+        session.push({ text: chunk }, 'message_chunk');
+      }
 
-    const result = await this.aiService.giveResponse(
-      relevantDocs.map((c) => c.content),
-      query,
-    );
+      const insertedAiMessage = await this.chatService.createMessage({
+        chatId,
+        content: fullResponse,
+        type: 'ai',
+      });
 
-    const insertedAiMessage = await this.chatService.createMessage({
-      chatId,
-      content: result,
-      type: 'ai',
-    });
-
-    session.push(
-      {
-        id: insertedAiMessage.id.toString(),
-        content: insertedAiMessage.content,
-      },
-      FINAL_RESULT_EVENT,
-    );
+      session.push(
+        {
+          id: insertedAiMessage.id.toString(),
+          content: insertedAiMessage.content,
+        },
+        FINAL_RESULT_EVENT,
+      );
+    } catch (error: any) {
+      console.error('Error in chat processing:', error);
+      session.push(
+        `Error: ${error?.message || 'Internal Server Error'}`,
+        MESSAGE_EVENT_NAME,
+      );
+    } finally {
+      // Disconnect/End the SSE request cleanly so it doesn't hang!
+      res.end();
+    }
   };
 }
 

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { ValidatedRequest } from 'express-zod-safe';
 
 export const paginationSchema = z.object({
   cursor: z.string().optional(),
@@ -8,6 +7,3 @@ export const paginationSchema = z.object({
 });
 
 export type Pagination = z.infer<typeof paginationSchema>;
-export type PaginationRequest = ValidatedRequest<{
-  query: typeof paginationSchema;
-}>;

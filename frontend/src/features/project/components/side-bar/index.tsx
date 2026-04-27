@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import { NavItems, type NavItem } from './nav-items';
 import { NavUser } from './nav-user';
+import { NavChats } from './nav-chats';
 import {
   Sidebar,
   SidebarContent,
@@ -21,11 +22,21 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { cn } from '@/lib/utils';
 
+import type { Chat } from '@/features/chat/schemas/chat.schema';
+
 interface ProjectSidebarProps extends ComponentProps<typeof Sidebar> {
   data: NavItem[];
+  chats?: Chat[];
+  projectId?: string;
 }
 
-export function ProjectSidebar({ className, data, ...props }: ProjectSidebarProps) {
+export function ProjectSidebar({
+  className,
+  data,
+  chats = [],
+  projectId = '',
+  ...props
+}: ProjectSidebarProps) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { state } = useSidebar(); // Access sidebar state
@@ -62,6 +73,7 @@ export function ProjectSidebar({ className, data, ...props }: ProjectSidebarProp
       </SidebarHeader>
       <SidebarContent>
         <NavItems projects={data} />
+        <NavChats chats={chats} projectId={projectId} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser name={user?.name ?? ''} email={user?.email ?? ''} avatar="" logout={logout} />

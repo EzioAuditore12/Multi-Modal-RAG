@@ -24,11 +24,11 @@ export const userTable = pgTable(USER_TABLE_NAME, {
 });
 
 export const selectUserSchema = createSelectSchema(userTable, {
-  email: z.email(),
+  email: z.email().toLowerCase(),
 });
 
 export const insertUserSchema = createInsertSchema(userTable, {
-  email: z.email(),
+  email: z.email().toLowerCase(),
   password: z.string().max(16),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 

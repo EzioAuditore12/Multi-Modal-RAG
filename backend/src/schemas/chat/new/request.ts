@@ -6,7 +6,10 @@ export const createNewChatSchema = z.object({
   messageId: z.coerce.bigint(),
   projectId: z.uuid(),
   query: z.string().min(1).max(512),
-  isFirstTime: z.coerce.boolean(),
+  isFirstTime: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
 });
 
 export type CreateNewChat = z.infer<typeof createNewChatSchema>;

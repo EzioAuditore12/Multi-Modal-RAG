@@ -51,8 +51,7 @@ export function useAuthenticatedServerSideEvents<TEventNames extends string>({
     const isUnauthorized =
       error &&
       (error.status === 401 ||
-        (error.message && typeof error.message === 'string' && error.message.includes('401')) ||
-        (error.type === 'error' && !error.status)); // broad fallback: try refresh on generic network error
+        (error.message && typeof error.message === 'string' && error.message.includes('401')));
 
     if (isUnauthorized && !isRefreshing) {
       setIsRefreshing(true);

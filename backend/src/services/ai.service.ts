@@ -53,20 +53,40 @@ export class AiService {
     );
 
     const contextString = Array.isArray(context) ? context.join('\n') : context;
-    const prompt = await promptTemplate.invoke({
+    const prompt = await promptTemplate.format({
       context: contextString,
       question,
     });
 
-    const resultSchema = z.object({
-      answer: z.string().describe('Answer of the given context'),
+    const response = await this.llmModel.invoke(prompt);
+    return typeof response.content === 'string'
+      ? response.content
+      : JSON.stringify(response.content);
+  }
+
+  public async *streamResponse(
+    context: string | string[],
+    question: string,
+  ): AsyncGenerator<string, void, unknown> {
+    const promptTemplate = PromptTemplate.fromTemplate(
+      Array.isArray(context)
+        ? `Given the following context:\n{context}\n\nAnswer the question:\n{question}`
+        : `Given the following context:\n{context}\n\nAnswer the question:\n{question}`,
+    );
+
+    const contextString = Array.isArray(context) ? context.join('\n') : context;
+    const prompt = await promptTemplate.format({
+      context: contextString,
+      question,
     });
 
-    const structuredModel = this.llmModel.withStructuredOutput(resultSchema);
+    const stream = await this.llmModel.stream(prompt);
 
-    const response = await structuredModel.invoke(prompt);
-
-    return response.answer;
+    for await (const chunk of stream) {
+      if (typeof chunk.content === 'string') {
+        yield chunk.content;
+      }
+    }
   }
 }
 

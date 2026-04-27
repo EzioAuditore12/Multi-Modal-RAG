@@ -123,7 +123,7 @@ export function useServerSideEvents<TEventNames extends string>({
       es.close();
       eventSourceRef.current = null;
     };
-  }, [url, options]);
+  }, [url, options, enabled]);
 
   /**
    * Register a listener for a specific event name at runtime.

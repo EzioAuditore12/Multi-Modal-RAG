@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, gt, ilike } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { Chat, ChatInsert, chatTable } from '@/db/models/chat.model';
@@ -7,7 +7,7 @@ import {
   MessageInsert,
   messageTable,
 } from '@/db/models/message.model';
-import { projectService } from './project.service';
+import { GetProjectChats } from '@/schemas/chat/get-project-chats';
 
 export class ChatService {
   private readonly database = db;
@@ -20,6 +20,23 @@ export class ChatService {
       .values(data)
       .returning()
       .then((res) => res[0]);
+  }
+
+  public async getAll(data: GetProjectChats): Promise<Chat[]> {
+    const { pageSize, cursor, search, projectId } = data;
+
+    const conditions = [eq(this.table.projectId, projectId)];
+
+    if (cursor) conditions.push(gt(this.table.id, cursor));
+
+    if (search) conditions.push(ilike(this.table.title, `%${search}%`));
+
+    return await this.database
+      .select()
+      .from(this.table)
+      .where(and(...conditions))
+      .orderBy(desc(this.table.id), this.table.updatedAt)
+      .limit(pageSize);
   }
 
   public async createMessage(data: MessageInsert): Promise<Message> {
