@@ -26,6 +26,7 @@ import type { Chat } from '@/features/chat/schemas/chat.schema';
 
 interface ProjectSidebarProps extends ComponentProps<typeof Sidebar> {
   data: NavItem[];
+  onChatDelete: (id: string) => void;
   chats?: Chat[];
   projectId?: string;
 }
@@ -35,6 +36,7 @@ export function ProjectSidebar({
   data,
   chats = [],
   projectId = '',
+  onChatDelete,
   ...props
 }: ProjectSidebarProps) {
   const user = useAuthStore((state) => state.user);
@@ -73,7 +75,7 @@ export function ProjectSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavItems projects={data} />
-        <NavChats chats={chats} projectId={projectId} />
+        <NavChats chats={chats} projectId={projectId} onDelete={onChatDelete} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser name={user?.name ?? ''} email={user?.email ?? ''} avatar="" logout={logout} />

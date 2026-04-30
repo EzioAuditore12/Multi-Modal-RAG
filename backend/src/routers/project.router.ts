@@ -92,11 +92,11 @@ projectRegistry.registerPath({
 
 projectRouter.post(
   '/project-file/:id',
+  uploadSingle,
   validate({
     params: projectFileParamsSchema,
     body: projectFileBodySchema,
   }),
   authMiddleware,
-  uploadSingle,
   projectController.uploadProjectFile,
 );

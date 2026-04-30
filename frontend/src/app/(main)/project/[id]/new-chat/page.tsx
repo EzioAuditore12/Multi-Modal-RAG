@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
-import { ChatInputArea } from '@/features/chat/components/input';
+import { ChatInputArea } from '@/features/chat/components/new-chat/input';
 import { SuggestionGrid } from '@/features/chat/components/new-chat/suggestion-card';
 import { NewChatHeroHeader } from '@/features/chat/components/new-chat/hero-header';
 

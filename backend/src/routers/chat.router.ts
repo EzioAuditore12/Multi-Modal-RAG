@@ -44,4 +44,19 @@ chatRouter.get(
   chatController.createNewChat,
 );
 
-chatRouter.delete('/', chatController.delete);
+chatRegistry.registerPath({
+  method: 'delete',
+  path: '/chat/{id}',
+  tags: TAGS,
+  request: {
+    params: z.object({ id: z.coerce.bigint() }),
+  },
+  responses: createApiResponse(z.object({ result: z.string() }), 'Success'),
+});
+
+chatRouter.delete(
+  '/:id',
+  validate({ params: z.object({ id: z.coerce.bigint() }) }),
+  //@ts-ignore
+  chatController.delete,
+);

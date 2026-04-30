@@ -19,14 +19,22 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import type { Chat } from '@/features/chat/schemas/chat.schema';
+import { ComponentProps } from 'react';
+import { cn } from '@/lib/utils';
 
-export function NavChats({ chats, projectId }: { chats: Chat[]; projectId: string }) {
+interface NavChatsProps extends ComponentProps<typeof SidebarGroup> {
+  chats: Chat[];
+  projectId: string;
+  onDelete: (id: string) => void;
+}
+
+export function NavChats({ className, chats, projectId, onDelete, ...props }: NavChatsProps) {
   const { isMobile } = useSidebar();
 
   if (!chats?.length) return null;
 
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+    <SidebarGroup className={cn('group-data-[collapsible=icon]:hidden', className)} {...props}>
       <SidebarGroupLabel>Recent Chats</SidebarGroupLabel>
       <SidebarMenu>
         {chats.map((chat) => (
@@ -51,7 +59,9 @@ export function NavChats({ chats, projectId }: { chats: Chat[]; projectId: strin
                 className="w-48"
                 side={isMobile ? 'bottom' : 'right'}
                 align={isMobile ? 'end' : 'start'}>
-                <DropdownMenuItem className="text-destructive focus:text-destructive">
+                <DropdownMenuItem
+                  onClick={() => onDelete(chat.id)}
+                  className="text-destructive focus:text-destructive">
                   <Trash2 className="mr-2 size-4" />
                   <span>Delete Chat</span>
                 </DropdownMenuItem>

@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { createSession } from 'better-sse';
@@ -11,6 +9,7 @@ import { projectService } from '@/services/project.service';
 import { GetProjectChatsRequest } from '@/schemas/chat/get-project-chats';
 import { messageService } from '@/services/message.service';
 import { NotFoundError } from 'express-error-toolkit';
+import { ChatParamRequest } from '@/schemas/chat/param.schema';
 
 export class ChatController {
   private readonly aiService = aiService;
@@ -162,20 +161,19 @@ export class ChatController {
     }
   };
 
-  public delete = async (req: Request, res: Response) => {
-    const id = req.params.id as string;
-    const userId = req.user?.id!;
+  public delete = async (req: ChatParamRequest, res: Response) => {
+    const { id } = req.params;
 
-    const isExistingChat = await this.chatService.findById(BigInt(id));
+    const isExistingChat = await this.chatService.findById(id);
 
     if (!isExistingChat)
       throw new NotFoundError(`Unable to find the chat with ${id}`);
 
-    await this.chatService.delete(BigInt(id));
+    await this.chatService.delete(id);
 
     return res
       .status(StatusCodes.ACCEPTED)
-      .send({ result: `Deleted chat with ${id}` });
+      .send({ result: `Deleted chat with ${id.toString()}` });
   };
 }
 

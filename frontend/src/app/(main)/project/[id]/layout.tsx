@@ -1,13 +1,16 @@
 'use client';
 
 import type { PropsWithChildren } from 'react';
-
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { ProjectSidebar } from '@/features/project/components/side-bar';
-import { NavItem } from '@/features/project/components/side-bar/nav-items';
 import { Building, Map, Pen } from 'lucide-react';
 import { useParams } from 'next/navigation';
+
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+
+import { ProjectSidebar } from '@/features/project/components/side-bar';
+import { NavItem } from '@/features/project/components/side-bar/nav-items';
+
 import { useGetProjectChats } from '@/features/chat/hooks/use-get-project-chats';
+import { useDeleteChat } from '@/features/chat/hooks/use-delete-chat';
 
 export default function ProjectLayout({ children }: PropsWithChildren) {
   const { id } = useParams() as unknown as { id: string };
@@ -16,7 +19,7 @@ export default function ProjectLayout({ children }: PropsWithChildren) {
 
   const flattenedProjectChats = projectChats?.pages.flat() || [];
 
-  console.log(flattenedProjectChats);
+  const { mutate } = useDeleteChat();
 
   const data = [
     {
@@ -37,7 +40,12 @@ export default function ProjectLayout({ children }: PropsWithChildren) {
   ] as NavItem[];
   return (
     <SidebarProvider>
-      <ProjectSidebar data={data} chats={flattenedProjectChats} projectId={id} />
+      <ProjectSidebar
+        onChatDelete={mutate}
+        data={data}
+        chats={flattenedProjectChats}
+        projectId={id}
+      />
       <SidebarInset>
         <header className="bg-background flex h-14 items-center gap-2 border-b px-4 lg:hidden">
           <SidebarTrigger />
