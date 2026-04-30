@@ -8,6 +8,7 @@ import { userRegistry } from '@/routers/user.router';
 import { authRegistry } from '@/routers/auth.router';
 import { projectRegistry } from '@/routers/project.router';
 import { chatRegistry } from '@/routers/chat.router';
+import { messageRegistry } from '@/routers/message.router';
 
 export type OpenAPIDocument = ReturnType<
   OpenApiGeneratorV3['generateDocument']
@@ -20,6 +21,7 @@ export function generateOpenAPIDocument(): OpenAPIDocument {
     authRegistry,
     projectRegistry,
     chatRegistry,
+    messageRegistry,
   ]);
   const generator = new OpenApiGeneratorV3(registry.definitions);
 

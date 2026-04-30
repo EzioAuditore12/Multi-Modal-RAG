@@ -1,4 +1,6 @@
-import { Response } from 'express';
+import fs from 'node:fs';
+
+import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { createSession } from 'better-sse';
 
@@ -7,11 +9,14 @@ import { aiService } from '@/services/ai.service';
 import { chatService } from '@/services/chat.service';
 import { projectService } from '@/services/project.service';
 import { GetProjectChatsRequest } from '@/schemas/chat/get-project-chats';
+import { messageService } from '@/services/message.service';
+import { NotFoundError } from 'express-error-toolkit';
 
 export class ChatController {
   private readonly aiService = aiService;
-  private readonly chatService = chatService;
   private readonly projectService = projectService;
+  private readonly chatService = chatService;
+  private readonly messageService = messageService;
 
   public getChatsofProject = async (
     req: GetProjectChatsRequest,
@@ -91,7 +96,7 @@ export class ChatController {
         );
       }
 
-      await this.chatService.createMessage({
+      await this.messageService.create({
         id: messageId,
         chatId,
         content: query,
@@ -132,7 +137,7 @@ export class ChatController {
         session.push({ text: chunk }, 'message_chunk');
       }
 
-      const insertedAiMessage = await this.chatService.createMessage({
+      const insertedAiMessage = await this.messageService.create({
         chatId,
         content: fullResponse,
         type: 'ai',
@@ -155,6 +160,22 @@ export class ChatController {
       // Disconnect/End the SSE request cleanly so it doesn't hang!
       res.end();
     }
+  };
+
+  public delete = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const userId = req.user?.id!;
+
+    const isExistingChat = await this.chatService.findById(BigInt(id));
+
+    if (!isExistingChat)
+      throw new NotFoundError(`Unable to find the chat with ${id}`);
+
+    await this.chatService.delete(BigInt(id));
+
+    return res
+      .status(StatusCodes.ACCEPTED)
+      .send({ result: `Deleted chat with ${id}` });
   };
 }
 

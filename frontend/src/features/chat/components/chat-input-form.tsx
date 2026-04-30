@@ -1,10 +1,12 @@
 'use client';
 
+import { SendIcon } from 'lucide-react';
+import type { ComponentProps } from 'react';
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { SendIcon } from 'lucide-react';
-import { ComponentProps } from 'react';
 import { cn } from '@/lib/utils';
+import { useForm } from '@tanstack/react-form';
 
 interface ChatInputFormProps extends ComponentProps<'form'> {
   onSend: (message: string) => void;
@@ -12,6 +14,8 @@ interface ChatInputFormProps extends ComponentProps<'form'> {
 }
 
 export function ChatInputForm({ onSend, isLoading, className, ...props }: ChatInputFormProps) {
+  const {} = useForm();
+
   return (
     <form
       className={cn('mx-auto flex w-full max-w-3xl items-end gap-2', className)}

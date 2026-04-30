@@ -6,9 +6,13 @@ import { TaskType } from '@google/generative-ai';
 
 import { env } from '@/env';
 
-export const GOOGLE_LLM_MODEL_NAME = 'gemini-3-flash-preview';
+export const GOOGLE_LLM_MODEL_NAME = 'gemini-3.1-flash-lite-preview';
 
-export const GOOGLE_EMBEDDING_MODEL_NAME = 'gemini-embedding-001';
+export const GOOGLE_EMBEDDING_MODEL_NAME:
+  | 'text-embedding-005'
+  | 'gemini-embedding-001'
+  | 'text-multilingual-embedding-002' = 'gemini-embedding-001';
+
 export const GOOGLE_EMBEDDING_OUTPUT_DIMENSIONALITY: number = 1536;
 
 export const googleLlmModel = new ChatGoogleGenerativeAI(
@@ -17,6 +21,7 @@ export const googleLlmModel = new ChatGoogleGenerativeAI(
     apiKey: env.GOOGLE_API_KEY,
     temperature: 0.7,
     maxOutputTokens: 2000,
+    maxRetries: 2,
   },
 );
 

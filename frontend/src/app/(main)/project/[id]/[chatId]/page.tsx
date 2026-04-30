@@ -2,18 +2,24 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { CheckCircle2, Loader2 } from 'lucide-react';
+
 import { useAuthenticatedServerSideEvents } from '@/lib/use-auth-sse';
 import { env } from '@/env';
 import { SnowFlakeId } from '@/lib/snowflake';
+
 import { ChatMessage } from '@/features/chat/components/chat-message';
 import { ChatInputForm } from '@/features/chat/components/chat-input-form';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useGetChatMessages } from '@/features/chat/hooks/use-get-chat-messages';
+import { H1 } from '@/components/ui/typography';
 // Import a hook to fetch messages: e.g., useGetChatMessages(chatId)
 
 export default function ChattingScreen() {
   const { id: projectId, chatId } = useParams() as { id: string; chatId: string };
   const searchParams = useSearchParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [messages, setMessages] = useState<any[]>([]); // Initialize with fetched history
   const [streamingAiMessage, setStreamingAiMessage] = useState<string>('');
@@ -54,6 +60,8 @@ export default function ChattingScreen() {
         setThinkingSteps((prev) => [...prev, text]);
       },
       message_chunk: (data: any) => {
+        queryClient.invalidateQueries({ queryKey: ['search-chats'] });
+
         const parsed = typeof data === 'string' ? JSON.parse(data) : data;
         if (parsed?.text) {
           setStreamingAiMessage((prev) => prev + parsed.text);
@@ -90,11 +98,20 @@ export default function ChattingScreen() {
     });
   };
 
+  const { data } = useGetChatMessages({ chatId, pageSize: 10 });
+
   return (
     <div className="relative flex h-full flex-1 flex-col">
       <div className="flex-1 space-y-4 overflow-y-auto p-4 pb-32">
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           {/* Render fetched history + new messages here */}
+
+          {data?.pages.map((page) =>
+            page.map((msg: any) => (
+              <ChatMessage key={msg.id} role={msg.type} content={msg.content} />
+            ))
+          )}
+
           {messages.map((msg, i) => (
             <ChatMessage key={i} role={msg.role} content={msg.content} />
           ))}

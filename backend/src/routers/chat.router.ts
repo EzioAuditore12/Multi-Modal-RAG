@@ -43,3 +43,5 @@ chatRouter.get(
   authMiddleware,
   chatController.createNewChat,
 );
+
+chatRouter.delete('/', chatController.delete);

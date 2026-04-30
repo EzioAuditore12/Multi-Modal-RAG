@@ -2,17 +2,11 @@ import { and, desc, eq, gt, ilike } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { Chat, ChatInsert, chatTable } from '@/db/models/chat.model';
-import {
-  Message,
-  MessageInsert,
-  messageTable,
-} from '@/db/models/message.model';
 import { GetProjectChats } from '@/schemas/chat/get-project-chats';
 
 export class ChatService {
   private readonly database = db;
   private readonly table = chatTable;
-  private readonly messageTable = messageTable;
 
   public async create(data: ChatInsert): Promise<Chat> {
     return await this.database
@@ -39,19 +33,26 @@ export class ChatService {
       .limit(pageSize);
   }
 
-  public async createMessage(data: MessageInsert): Promise<Message> {
-    return await this.database
-      .insert(this.messageTable)
-      .values(data)
-      .returning()
-      .then((res) => res[0]);
-  }
-
-  public async findById(projectId: string, id: bigint) {
+  public async findByIdAndProjectId(
+    projectId: string,
+    id: bigint,
+  ): Promise<Chat[]> {
     return await this.database
       .select()
       .from(this.table)
       .where(and(eq(this.table.id, id), eq(this.table.projectId, projectId)));
+  }
+
+  public async findById(id: bigint): Promise<Chat | undefined> {
+    return await this.database
+      .select()
+      .from(this.table)
+      .where(eq(this.table.id, id))
+      .then((res) => res[0] ?? undefined);
+  }
+
+  public async delete(id: bigint): Promise<void> {
+    await this.database.delete(this.table).where(eq(this.table.id, id));
   }
 }
 

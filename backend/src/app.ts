@@ -14,6 +14,7 @@ import { env } from '@/env';
 import { authRouter } from './routers/auth.router';
 import { projectRouter } from './routers/project.router';
 import { chatRouter } from './routers/chat.router';
+import { messageRouter } from './routers/message.router';
 
 const app: Express = express();
 
@@ -36,6 +37,7 @@ app.use('/user', userRouter);
 app.use(authRouter);
 app.use('/project', projectRouter);
 app.use('/chat', chatRouter);
+app.use('/message', messageRouter);
 
 // Swagger UI
 app.use(openAPIRouter);

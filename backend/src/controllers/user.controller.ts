@@ -1,8 +1,8 @@
 import type { Request, RequestHandler, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { NotFoundError } from 'express-error-toolkit';
 
 import { userService } from '@/services/user.service';
-import { NotFoundError } from 'express-error-toolkit';
 import { publicUserSchema } from '@/db/models/user.model';
 
 class UserController {
@@ -11,7 +11,7 @@ class UserController {
   public getUser: RequestHandler = async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const serviceResponse = await userService.findById(id);
-    res.status(serviceResponse.statusCode).send(serviceResponse);
+    return res.status(serviceResponse.statusCode).send(serviceResponse);
   };
 
   public getProfile: RequestHandler = async (req: Request, res: Response) => {
