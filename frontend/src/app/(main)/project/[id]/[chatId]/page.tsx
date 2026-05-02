@@ -1,14 +1,15 @@
 ﻿'use client';
 
-import { useState, useMemo, Activity } from 'react';
+import { useState, useMemo, useLayoutEffect, useEffect, useRef, Activity } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import type { StickToBottomContext } from 'use-stick-to-bottom';
 
 import { useAuthenticatedServerSideEvents } from '@/lib/use-auth-sse';
 import { env } from '@/env';
 import { SnowFlakeId } from '@/lib/snowflake';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { useGetChatMessages } from '@/features/chat/hooks/use-get-chat-messages';
 
 import {
@@ -23,19 +24,39 @@ import {
   MessageContent,
   MessageResponse,
 } from '@/components/ai/message';
-import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai/reasoning';
 
 import { type PromptInputMessage } from '@/components/ai/prompt-input';
 
 import { ChatPromptInput } from '@/features/chat/components/input';
+import { StreamThinking } from '@/features/chat/components/stream-thinking';
+import { ChatResultEvent } from '@/features/chat/schemas/events/result.schema';
+import { MessageChunkEvent } from '@/features/chat/schemas/events/message-chunk.event';
+
+// Message types
+type ChatMessage = {
+  id: string;
+  role: 'human' | 'ai';
+  content: string;
+};
+
+type ChatMessageForDisplay = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+};
 
 export default function ChattingScreen() {
   const { id: projectId, chatId } = useParams() as { id: string; chatId: string };
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const conversationContextRef = useRef<StickToBottomContext | null>(null);
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
+  const pendingScrollAdjustmentRef = useRef(false);
+  const previousScrollHeightRef = useRef(0);
+  const previousScrollTopRef = useRef(0);
 
-  const [messages, setMessages] = useState<any[]>([]); // Initialize with fetched history
+  const [messages, setMessages] = useState<ChatMessage[]>([]); // Initialize with fetched history
   const [streamingAiMessage, setStreamingAiMessage] = useState<string>('');
   const [thinkingSteps, setThinkingSteps] = useState<string[]>([]);
   const isFirstTime = !!searchParams.get('query');
@@ -46,8 +67,6 @@ export default function ChattingScreen() {
   });
 
   const [text, setText] = useState<string>('');
-  const [useWebSearch, setUseWebSearch] = useState<boolean>(false);
-  const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
 
   const sseOptions = useMemo(
     () => ({
@@ -62,12 +81,12 @@ export default function ChattingScreen() {
     [chatId, chatState.messageId, projectId, chatState.query, isFirstTime, searchParams]
   );
 
-  const { getEventData } = useAuthenticatedServerSideEvents({
+  useAuthenticatedServerSideEvents({
     url: `${env.NEXT_PUBLIC_API_URL}/chat/new`,
     enabled: !!chatState.query,
     options: sseOptions,
     events: {
-      message: (data: any) => {
+      message: (data: string) => {
         let text = '';
         try {
           text = typeof data === 'string' ? JSON.parse(data) : data;
@@ -76,16 +95,16 @@ export default function ChattingScreen() {
         }
         setThinkingSteps((prev) => [...prev, text]);
       },
-      message_chunk: (data: any) => {
+      message_chunk: (data) => {
         queryClient.invalidateQueries({ queryKey: ['search-chats'] });
 
-        const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+        const parsed: MessageChunkEvent = typeof data === 'string' ? JSON.parse(data) : data;
         if (parsed?.text) {
           setStreamingAiMessage((prev) => prev + parsed.text);
         }
       },
-      result: (data: any) => {
-        const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+      result: (data) => {
+        const parsedData: ChatResultEvent = typeof data === 'string' ? JSON.parse(data) : data;
         setMessages((prev) => [
           ...prev,
           { role: 'ai', content: parsedData.content, id: parsedData.id },
@@ -123,13 +142,16 @@ export default function ChattingScreen() {
     });
   };
 
-  const { data } = useGetChatMessages({ chatId, pageSize: 10 });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetChatMessages({
+    chatId,
+    pageSize: 10,
+  });
 
   // Combine all messages to format for UI component
   const allHistory = useMemo(() => {
-    const fromApi = data?.pages.flatMap((page) => page) || [];
+    const fromApi = [...(data?.pages.flatMap((page) => page) || [])].reverse();
     return [
-      ...fromApi.map((msg: any) => ({
+      ...fromApi.map((msg) => ({
         id: msg.id,
         role: msg.type === 'human' ? 'user' : 'assistant',
         content: msg.content,
@@ -139,14 +161,48 @@ export default function ChattingScreen() {
         role: msg.role === 'human' ? 'user' : 'assistant',
         content: msg.content,
       })),
-    ];
+    ] as ChatMessageForDisplay[];
   }, [data, messages]);
 
   const isStreaming = !!chatState.query;
 
+  useEffect(() => {
+    const container = conversationContextRef.current?.scrollRef.current;
+    if (!container) return;
+
+    scrollContainerRef.current = container;
+
+    const handleScroll = () => {
+      if (container.scrollTop > 80 || !hasNextPage || isFetchingNextPage) return;
+
+      pendingScrollAdjustmentRef.current = true;
+      previousScrollHeightRef.current = container.scrollHeight;
+      previousScrollTopRef.current = container.scrollTop;
+
+      void fetchNextPage();
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useLayoutEffect(() => {
+    if (!pendingScrollAdjustmentRef.current) return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const scrollHeightDelta = container.scrollHeight - previousScrollHeightRef.current;
+    container.scrollTop = previousScrollTopRef.current + scrollHeightDelta;
+    pendingScrollAdjustmentRef.current = false;
+  }, [data?.pages.length]);
+
   return (
     <div className="absolute inset-0 flex h-full w-full flex-col overflow-hidden">
-      <Conversation className="min-h-0 flex-1 border-b">
+      <Conversation contextRef={conversationContextRef} className="min-h-0 flex-1 border-b">
         <ConversationContent>
           {allHistory.map((message, i) => (
             <MessageBranch defaultBranch={0} key={message.id || i}>
@@ -163,25 +219,7 @@ export default function ChattingScreen() {
           ))}
 
           <Activity mode={isStreaming ? 'visible' : 'hidden'}>
-            <MessageBranch defaultBranch={0} key="streaming-msg">
-              <MessageBranchContent>
-                <Message from="assistant">
-                  <div>
-                    {thinkingSteps.length > 0 && !streamingAiMessage && (
-                      <Reasoning duration={0} defaultOpen={true}>
-                        <ReasoningTrigger />
-                        <ReasoningContent>{thinkingSteps.join('\n')}</ReasoningContent>
-                      </Reasoning>
-                    )}
-                    {streamingAiMessage && (
-                      <MessageContent>
-                        <MessageResponse>{streamingAiMessage}</MessageResponse>
-                      </MessageContent>
-                    )}
-                  </div>
-                </Message>
-              </MessageBranchContent>
-            </MessageBranch>
+            <StreamThinking streamingAiMessage={streamingAiMessage} thinkingSteps={thinkingSteps} />
           </Activity>
         </ConversationContent>
         <ConversationScrollButton />

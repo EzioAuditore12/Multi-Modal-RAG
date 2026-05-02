@@ -1,4 +1,4 @@
-import { and, asc, eq, gt } from 'drizzle-orm';
+import { and, desc, eq, lt } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -25,13 +25,13 @@ export class MessageService {
 
     const conditions = [eq(this.table.chatId, chatId)];
 
-    if (cursor) conditions.push(gt(this.table.id, cursor));
+    if (cursor) conditions.push(lt(this.table.id, cursor));
 
     return await this.database
       .select()
       .from(this.table)
       .where(and(...conditions))
-      .orderBy(asc(this.table.id), this.table.updatedAt)
+      .orderBy(desc(this.table.id), desc(this.table.updatedAt))
       .limit(pageSize);
   }
 }

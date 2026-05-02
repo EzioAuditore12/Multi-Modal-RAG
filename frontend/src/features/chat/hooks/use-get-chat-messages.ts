@@ -7,7 +7,6 @@ export const useGetChatMessages = ({ pageSize, chatId }: Omit<GetChatMessagesPar
   return useInfiniteQuery({
     queryKey: ['messages', chatId, pageSize],
 
-    //@ts-ignore
     queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
       getChatMessagesApi({ chatId, pageSize, cursor: pageParam }),
 

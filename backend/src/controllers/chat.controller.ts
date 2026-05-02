@@ -17,6 +17,12 @@ export class ChatController {
   private readonly chatService = chatService;
   private readonly messageService = messageService;
 
+  private readonly MESSAGE_EVENT = 'message';
+  private readonly PROJECT_TITLE_WITH_CHAT_ID_EVENT =
+    'project_title_with_chat_id';
+  private readonly FINAL_RESULT_EVENT = 'result';
+  private readonly MESSAGE_CHUNK_EVENT = 'message_chunk';
+
   public getChatsofProject = async (
     req: GetProjectChatsRequest,
     res: Response,
@@ -56,10 +62,6 @@ export class ChatController {
 
     const session = await createSession(req, res);
 
-    const MESSAGE_EVENT_NAME = 'message';
-    const PROJECT_TITLE_WITH_CHAT_ID_EVENT_NAME = 'project_title_with_chat_id';
-    const FINAL_RESULT_EVENT = 'result';
-
     const isAuthenticedUserAndExisitingProject =
       await this.projectService.findByIdAndIsAuthenticatedUser(
         projectId,
@@ -73,7 +75,7 @@ export class ChatController {
 
     session.push(
       'Authenticating session and validating workspace...',
-      MESSAGE_EVENT_NAME,
+      this.MESSAGE_EVENT,
     );
 
     try {
@@ -87,11 +89,11 @@ export class ChatController {
         });
 
         // We can optionally push this to message steps too
-        session.push('Generated conversation title.', MESSAGE_EVENT_NAME);
+        session.push('Generated conversation title.', this.MESSAGE_EVENT);
 
         session.push(
           { chatId: createdChat.id.toString(), title: createdChat.title },
-          PROJECT_TITLE_WITH_CHAT_ID_EVENT_NAME,
+          this.PROJECT_TITLE_WITH_CHAT_ID_EVENT,
         );
       }
 
@@ -104,7 +106,7 @@ export class ChatController {
 
       session.push(
         'Saved user query to conversation history.',
-        MESSAGE_EVENT_NAME,
+        this.MESSAGE_EVENT,
       );
 
       const relevantDocs =
@@ -120,10 +122,10 @@ export class ChatController {
 
       session.push(
         `Retrieved ${relevantDocs.length} relevant documents from the knowledge base${docPreviewInfo}.`,
-        MESSAGE_EVENT_NAME,
+        this.MESSAGE_EVENT,
       );
 
-      session.push('Synthesizing final response...', MESSAGE_EVENT_NAME);
+      session.push('Synthesizing final response...', this.MESSAGE_EVENT);
 
       let fullResponse = '';
       const stream = this.aiService.streamResponse(
@@ -133,7 +135,7 @@ export class ChatController {
 
       for await (const chunk of stream) {
         fullResponse += chunk;
-        session.push({ text: chunk }, 'message_chunk');
+        session.push({ text: chunk }, this.MESSAGE_CHUNK_EVENT);
       }
 
       const insertedAiMessage = await this.messageService.create({
@@ -146,14 +148,15 @@ export class ChatController {
         {
           id: insertedAiMessage.id.toString(),
           content: insertedAiMessage.content,
+          type: 'ai',
         },
-        FINAL_RESULT_EVENT,
+        this.FINAL_RESULT_EVENT,
       );
     } catch (error: any) {
       console.error('Error in chat processing:', error);
       session.push(
         `Error: ${error?.message || 'Internal Server Error'}`,
-        MESSAGE_EVENT_NAME,
+        this.MESSAGE_EVENT,
       );
     } finally {
       // Disconnect/End the SSE request cleanly so it doesn't hang!
