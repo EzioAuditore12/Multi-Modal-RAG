@@ -11,7 +11,6 @@ export const useGetProjectChats = ({
   return useInfiniteQuery({
     queryKey: ['search-chats', projectId, search, pageSize],
 
-    //@ts-ignore
     queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
       getProjectChatsApi({ projectId, search, pageSize, cursor: pageParam }),
 

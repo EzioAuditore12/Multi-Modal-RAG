@@ -12,7 +12,7 @@ import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai/r
 
 import { cn } from '@/lib/utils';
 
-interface StreamThinkingProps extends MessageBranchProps {
+export interface StreamThinkingProps extends MessageBranchProps {
   thinkingSteps: string[];
   streamingAiMessage: string;
 }
