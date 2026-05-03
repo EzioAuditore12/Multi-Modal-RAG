@@ -29,7 +29,7 @@
     "@google/generative-ai": "^0.24.1",
     "@langchain/classic": "^1.0.32",
     "@langchain/cohere": "^1.0.5",
-    "@langchain/core": "^1.1.43",
+    "@langchain/core": "^1.1.44",
     "@langchain/langgraph": "^1.2.9",
     "@node-rs/argon2": "^2.0.2",
     "@scalar/express-api-reference": "^0.9.13",

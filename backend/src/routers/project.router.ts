@@ -22,6 +22,7 @@ import {
 } from '@/schemas/project/file/request.schema';
 import { getAllProjectsSchema } from '@/schemas/project/get-all.schema';
 import { projectSchema } from '@/db/models/project.model';
+import { projectFileSchema } from '@/db/models/project-file.table';
 
 export const projectRegistry = new OpenAPIRegistry();
 export const projectRouter: Router = express.Router();
@@ -77,6 +78,25 @@ projectRouter.get(
   '/:id',
   validate({ params: z.object({ id: z.uuid() }) }),
   projectController.getById,
+);
+
+projectRegistry.registerPath({
+  method: 'get',
+  path: '/project/project-file/{id}',
+  tags: TAGS,
+  request: {
+    params: projectFileParamsSchema,
+  },
+  responses: createApiResponse(projectFileSchema.optional(), 'Success'),
+});
+
+projectRouter.get(
+  '/project-file/:id',
+  validate({
+    params: projectFileParamsSchema,
+  }),
+  authMiddleware,
+  projectController.getProjectFileById,
 );
 
 projectRegistry.registerPath({

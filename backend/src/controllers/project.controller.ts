@@ -56,6 +56,24 @@ export class ProjectController {
     return res.status(StatusCodes.OK).send(response);
   };
 
+  public getProjectFileById = async (req: Request, res: Response) => {
+    const userId = req.user?.id!;
+    const projectId = req.params.id as string;
+
+    const existingProject =
+      await this.projectService.findByIdAndIsAuthenticatedUser(
+        projectId,
+        userId,
+      );
+
+    if (!existingProject)
+      throw new NotFoundError(`No such project with ${projectId} found`);
+
+    const projectFile = await this.projectService.getProjectFileById(projectId);
+
+    return res.status(StatusCodes.ACCEPTED).send(projectFile);
+  };
+
   public uploadProjectFile = async (req: ProjectFileRequest, res: Response) => {
     const userId = req.user?.id!;
     const projectId = req.params.id as string;
@@ -66,6 +84,9 @@ export class ProjectController {
         projectId,
         userId,
       );
+
+    if (!existingProject)
+      throw new NotFoundError(`No such project with ${projectId} found`);
 
     const existingProjectFile =
       await this.projectService.getProjectFileById(projectId);
