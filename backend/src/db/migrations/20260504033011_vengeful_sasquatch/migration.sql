@@ -1,0 +1,1 @@
+CREATE INDEX "content_fts_search" ON "project_file_embedding" USING gin ((setweight(to_tsvector('english', "content"), 'A') || setweight(to_tsvector('english', "meta_data"::text), 'B')));

@@ -29,6 +29,12 @@ import { uploadToCloudinary } from '@/lib/cloudinary';
 import { Pagination } from '@/schemas/pagination.schema';
 import { aiService } from './ai.service';
 
+type EmbeddingMetaData = {
+  text: string;
+  tables: string[];
+  images: string[];
+};
+
 export class ProjectService {
   private readonly database = db;
   private readonly table = projectTable;
@@ -66,12 +72,20 @@ export class ProjectService {
       .then((res) => res[0]);
   }
 
-  public async getSettings(id: string): Promise<ProjectSetting | undefined> {
+  public async getSettings(id: string): Promise<ProjectSetting> {
     return await this.database
       .select()
       .from(this.projectSettingsTable)
       .where(eq(this.projectSettingsTable.id, id))
-      .then((res) => res[0] ?? undefined);
+      .then((res) => res[0]);
+  }
+
+  public async getProjectFileEmbeddingIds(id: string): Promise<bigint[]> {
+    return await this.database
+      .select({ id: this.projectFileEmbeddingTable.id })
+      .from(this.projectFileEmbeddingTable)
+      .where(eq(this.projectFileEmbeddingTable.projectFileId, id))
+      .then((res) => res.map((c) => c.id));
   }
 
   public async findById(id: string): Promise<Project | undefined> {
@@ -164,6 +178,8 @@ export class ProjectService {
     documents: Document[],
   ): Promise<void> {
     for (const doc of documents) {
+      const metaData = this.normalizeEmbeddingMetaData(doc.metadata);
+
       const embedding = await this.aiService.generateDocumentEmbedding([
         doc.pageContent,
       ]);
@@ -172,9 +188,27 @@ export class ProjectService {
         projectFileId,
         content: doc.pageContent,
         embedding: embedding[0],
-        metaData: doc.metadata,
+        metaData,
       });
     }
+  }
+
+  private normalizeEmbeddingMetaData(metadata: unknown): EmbeddingMetaData {
+    const data = (metadata ?? {}) as Partial<EmbeddingMetaData>;
+
+    return {
+      text: typeof data.text === 'string' ? data.text : '',
+      tables: Array.isArray(data.tables)
+        ? data.tables.filter(
+            (table): table is string => typeof table === 'string',
+          )
+        : [],
+      images: Array.isArray(data.images)
+        ? data.images.filter(
+            (image): image is string => typeof image === 'string',
+          )
+        : [],
+    };
   }
 
   public async findSimiliarFromProjectFileEmbeddings(

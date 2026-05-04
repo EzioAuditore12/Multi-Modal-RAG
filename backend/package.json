@@ -17,14 +17,14 @@
     "db:pull": "pnpm exec drizzle-kit pull",
     "db:check": "pnpm exec drizzle-kit check",
     "db:up": "pnpm exec drizzle-kit up",
-    "db:studio": "pnpm drizzle-kit studio --verbose",
+    "db:studio": "pnpm exec drizzle-kit studio --verbose",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "format": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
-    "@dakshp1234/langchain-google-genai": "^2.1.29",
+    "@dakshp1234/langchain-google-genai": "^2.1.30",
     "@dakshp1234/langchain-textsplitters": "^1.0.2",
     "@google/generative-ai": "^0.24.1",
     "@langchain/classic": "^1.0.32",
@@ -55,7 +55,7 @@
     "pino-http": "^11.0.0",
     "socket.io": "^4.8.3",
     "unstructured-client": "^0.31.0",
-    "zod": "^4.4.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.3",
@@ -95,6 +95,5 @@
     "dts": true,
     "splitting": false,
     "skipNodeModulesBundle": true
-  },
-  "packageManager": "pnpm@10.15.0"
+  }
 }

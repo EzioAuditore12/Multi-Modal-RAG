@@ -13,14 +13,38 @@ export const uploadToCloudinary = async (
   fileName?: string,
   accessMode: AccessMode = 'public',
 ) => {
+  if (
+    !env.CLOUDINARY_CLOUD_NAME ||
+    !env.CLOUDINARY_API_KEY ||
+    !env.CLOUDINARY_API_SECRET
+  ) {
+    throw new Error(
+      'Cloudinary credentials are missing. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET.',
+    );
+  }
+
   try {
     const data = await cloudinary.v2.uploader.upload(filePath, {
       filename_override: fileName,
       access_mode: accessMode,
+      resource_type: 'auto',
     });
     return data;
   } catch (error) {
-    console.log(error);
-    throw new Error('Internal Server Error (cloudinary)');
+    const cloudinaryError = error as {
+      message?: string;
+      http_code?: number;
+      name?: string;
+    };
+
+    const errorMessage = cloudinaryError?.message ?? 'Unknown Cloudinary error';
+
+    if (errorMessage.includes('Upload preset must be specified')) {
+      throw new Error(
+        'Cloudinary attempted unsigned upload. Check CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET, or configure an unsigned upload preset explicitly.',
+      );
+    }
+
+    throw new Error(`Cloudinary upload failed: ${errorMessage}`);
   }
 };

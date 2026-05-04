@@ -4,6 +4,7 @@ import zlib from 'node:zlib';
 import { Document, HumanMessage } from 'langchain';
 
 import { googleLlmModel } from '@/ai/models/google.model';
+import { uploadToCloudinary } from '@/lib/cloudinary';
 
 import {
   ChunkingStrategy,
@@ -23,6 +24,12 @@ type ContentData = {
   tables: string[];
   images: string[];
   types: string[];
+};
+
+type EmbeddingMetaData = {
+  text: string;
+  tables: string[];
+  images: string[];
 };
 
 export class RagIngestionService {
@@ -80,7 +87,7 @@ export class RagIngestionService {
       console.log(`   Processing chunk ${currentChunk}/${totalChunks}`);
 
       // Analyze chunk content
-      const contentData = this.separateContentTypes(chunk);
+      const contentData = await this.separateContentTypes(chunk);
 
       // Debug prints
       console.log(`     Types found: ${contentData.types}`);
@@ -114,20 +121,14 @@ export class RagIngestionService {
       // Create LangChain Document with rich metadata
       langchainDocuments.push({
         pageContent: enhancedContent,
-        metadata: {
-          original_content: JSON.stringify({
-            raw_text: contentData.text,
-            tables_html: contentData.tables,
-            images_base64: contentData.images,
-          }),
-        },
+        metadata: this.buildEmbeddingMetaData(contentData),
       });
     }
 
     return langchainDocuments;
   }
 
-  private separateContentTypes(chunk: Chunk): ContentData {
+  private async separateContentTypes(chunk: Chunk): Promise<ContentData> {
     const contentData: ContentData = {
       text: chunk.text,
       tables: [],
@@ -155,7 +156,26 @@ export class RagIngestionService {
         } else if (elementType === 'Image') {
           if (element?.metadata?.image_base64) {
             contentData.types.push('image');
-            contentData.images.push(element.metadata.image_base64);
+            try {
+              // Upload image to Cloudinary and store URL
+              const base64Data = element.metadata.image_base64;
+              const buffer = Buffer.from(base64Data, 'base64');
+              const tempPath = `./public/image-${crypto.randomUUID()}.jpg`;
+
+              fs.writeFileSync(tempPath, buffer);
+              const uploadResult = await uploadToCloudinary(
+                tempPath,
+                `rag-image-${Date.now()}`,
+              );
+              contentData.images.push(uploadResult.secure_url);
+
+              // Clean up temp file
+              fs.unlinkSync(tempPath);
+            } catch (error) {
+              console.error(
+                `     ❌ Failed to upload image to Cloudinary: ${error}`,
+              );
+            }
           }
         }
       }
@@ -164,6 +184,14 @@ export class RagIngestionService {
     contentData.types = Array.from(new Set(contentData.types));
 
     return contentData;
+  }
+
+  private buildEmbeddingMetaData(contentData: ContentData): EmbeddingMetaData {
+    return {
+      text: contentData.text,
+      tables: contentData.tables,
+      images: contentData.images,
+    };
   }
 
   private async createAiEnhancedSummary(
@@ -202,10 +230,10 @@ export class RagIngestionService {
     // Build message content for LLM
     const messageContent: any[] = [{ type: 'text', text: promptText }];
 
-    for (const imageBase64 of images) {
+    for (const imageUrl of images) {
       messageContent.push({
         type: 'image_url',
-        image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
+        image_url: { url: imageUrl },
       });
     }
 

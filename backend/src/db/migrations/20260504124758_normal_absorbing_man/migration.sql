@@ -1,0 +1,2 @@
+ALTER TABLE "project_file_embedding" ALTER COLUMN "meta_data" SET DEFAULT '{"text":"","images":[],"tables":[]}';--> statement-breakpoint
+ALTER TABLE "project_file_embedding" ALTER COLUMN "meta_data" SET NOT NULL;

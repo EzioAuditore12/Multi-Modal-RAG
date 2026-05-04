@@ -14,6 +14,8 @@ import {
   createUpdateSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { sql } from 'drizzle-orm';
+
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 
 extendZodWithOpenApi(z);
@@ -35,7 +37,14 @@ export const projectFileEmbeddingTable = pgTable(
     ),
     embedding: vector('embedding', { dimensions: 1536 }).notNull(),
     content: text('content').notNull(),
-    metaData: jsonb('meta_data'),
+    metaData: jsonb('meta_data')
+      .$type<{
+        text: string;
+        images: string[];
+        tables: string[];
+      }>()
+      .notNull()
+      .default(sql`'{"text":"","images":[],"tables":[]}'::jsonb`),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
       .$onUpdateFn(() => new Date())
@@ -44,6 +53,10 @@ export const projectFileEmbeddingTable = pgTable(
   (t) => [
     index('project_file_embedding_project_file_id_idx').on(t.projectFileId),
     index('embedding_index').using('hnsw', t.embedding.op('vector_cosine_ops')),
+    index('content_fts_search').using(
+      'gin',
+      sql`(setweight(to_tsvector('english', ${t.content}), 'A') || setweight(to_tsvector('english', ${t.metaData}::text), 'B'))`,
+    ),
   ],
 );
 

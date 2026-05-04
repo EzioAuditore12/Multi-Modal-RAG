@@ -10,12 +10,14 @@ import { GetProjectChatsRequest } from '@/schemas/chat/get-project-chats';
 import { messageService } from '@/services/message.service';
 import { NotFoundError } from 'express-error-toolkit';
 import { ChatParamRequest } from '@/schemas/chat/param.schema';
+import { ragRetreivalService } from '@/services/rag/retreival.service';
 
 export class ChatController {
   private readonly aiService = aiService;
   private readonly projectService = projectService;
   private readonly chatService = chatService;
   private readonly messageService = messageService;
+  private readonly ragRetreivalService = ragRetreivalService;
 
   private readonly MESSAGE_EVENT = 'message';
   private readonly PROJECT_TITLE_WITH_CHAT_ID_EVENT =
@@ -109,11 +111,11 @@ export class ChatController {
         this.MESSAGE_EVENT,
       );
 
-      const relevantDocs =
-        await this.projectService.findSimiliarFromProjectFileEmbeddings(
-          projectId,
-          query,
-        );
+      const relevantDocs = await this.ragRetreivalService.retreiveContext({
+        projectId,
+        query,
+        limit: 5,
+      });
 
       // Give a little info limit on the docs
       const docPreviewInfo = relevantDocs.length
