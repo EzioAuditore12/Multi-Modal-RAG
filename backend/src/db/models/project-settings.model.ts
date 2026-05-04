@@ -19,19 +19,27 @@ export const projectSettingTable = pgTable(PROJECT_SETTINGS_TABLE_NAME, {
   id: uuid('id')
     .primaryKey()
     .references(() => projectTable.id, { onDelete: 'cascade' }),
-  embeddingModel: varchar('embedding_model', { length: 100 }),
-  ragStrategy: ragStrategyEnum('rag_stratergy'),
-  rerankingModel: varchar('reranking_model', { length: 100 }),
+  embeddingModel: varchar('embedding_model', { length: 100 })
+    .default('gemini-embedding-001')
+    .notNull(),
+  ragStrategy: ragStrategyEnum('rag_stratergy').default('basic').notNull(),
+  reRankingModel: varchar('reranking_model', { length: 100 })
+    .default('not defined')
+    .notNull(),
   updatedAt: timestamp()
     .$onUpdateFn(() => new Date())
     .notNull(),
 });
 
-export const projectSettingSchema = createSelectSchema(projectSettingTable);
+export const projectSettingSchema = createSelectSchema(projectSettingTable, {
+  id: z.uuid(),
+  updatedAt: z.date(),
+});
 export const projectSettingInsertSchema =
   createInsertSchema(projectSettingTable);
-export const projectSettingUpdateSchema =
-  createUpdateSchema(projectSettingTable);
+export const projectSettingUpdateSchema = createUpdateSchema(
+  projectSettingTable,
+).omit({ updatedAt: true });
 
 export type ProjectSetting = z.infer<typeof projectSettingSchema>;
 export type ProjectSettingInsert = z.infer<typeof projectSettingInsertSchema>;

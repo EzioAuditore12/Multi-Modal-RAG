@@ -1,7 +1,7 @@
 'use client';
 
 import type { PropsWithChildren } from 'react';
-import { Building, Map, Pen } from 'lucide-react';
+import { Pen, Settings } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -28,14 +28,9 @@ export default function ProjectLayout({ children }: PropsWithChildren) {
       icon: Pen,
     },
     {
-      name: 'Create Property',
-      url: '/',
-      icon: Map,
-    },
-    {
-      name: 'Manage Properties',
-      url: '/',
-      icon: Building,
+      name: 'Settings',
+      url: `/project/${id}/settings`,
+      icon: Settings,
     },
   ] as NavItem[];
   return (

@@ -9,6 +9,7 @@ import { projectService } from '@/services/project.service';
 import { ProjectFileRequest } from '@/schemas/project/file/request.schema';
 import { ragIngestionService } from '@/services/rag/injestion.service';
 import { GetAllProjectsRequest } from '@/schemas/project/get-all.schema';
+import { UpdateProjectSettingsRequest } from '@/schemas/project/settings/request.schema';
 
 export class ProjectController {
   private readonly projectService = projectService;
@@ -52,6 +53,51 @@ export class ProjectController {
     const projectId = req.params.id as string;
 
     const response = await this.projectService.findById(projectId);
+
+    return res.status(StatusCodes.OK).send(response);
+  };
+
+  public updateSettings = async (
+    req: UpdateProjectSettingsRequest,
+    res: Response,
+  ) => {
+    const userId = req.user?.id!;
+    const projectId = req.params.id;
+
+    const { embeddingModel, ragStrategy, reRankingModel } = req.body;
+
+    const existingProject =
+      await this.projectService.findByIdAndIsAuthenticatedUser(
+        projectId,
+        userId,
+      );
+
+    if (!existingProject)
+      throw new NotFoundError(`No such project with ${projectId} found`);
+
+    const response = await this.projectService.updateSettings(projectId, {
+      embeddingModel,
+      ragStrategy,
+      reRankingModel,
+    });
+
+    return res.status(StatusCodes.ACCEPTED).send(response);
+  };
+
+  public getSettingsById = async (req: Request, res: Response) => {
+    const userId = req.user?.id!;
+    const projectId = req.params.id as string;
+
+    const existingProject =
+      await this.projectService.findByIdAndIsAuthenticatedUser(
+        projectId,
+        userId,
+      );
+
+    if (!existingProject)
+      throw new NotFoundError(`No such project with ${projectId} found`);
+
+    const response = await this.projectService.getSettings(projectId);
 
     return res.status(StatusCodes.OK).send(response);
   };

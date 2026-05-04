@@ -23,6 +23,11 @@ import {
 import { getAllProjectsSchema } from '@/schemas/project/get-all.schema';
 import { projectSchema } from '@/db/models/project.model';
 import { projectFileSchema } from '@/db/models/project-file.table';
+import {
+  updateProjectSettingParamSchema,
+  updateProjectSettingSchema,
+} from '@/schemas/project/settings/request.schema';
+import { projectSettingSchema } from '@/db/models/project-settings.model';
 
 export const projectRegistry = new OpenAPIRegistry();
 export const projectRouter: Router = express.Router();
@@ -119,4 +124,44 @@ projectRouter.post(
   }),
   authMiddleware,
   projectController.uploadProjectFile,
+);
+
+projectRegistry.registerPath({
+  method: 'patch',
+  path: '/project/project-settings/{id}',
+  tags: TAGS,
+  request: {
+    params: updateProjectSettingParamSchema,
+    body: requestBody(updateProjectSettingSchema),
+  },
+  responses: createApiResponse(projectSettingSchema, 'Success'),
+});
+
+projectRouter.patch(
+  '/project-settings/:id',
+  validate({
+    params: updateProjectSettingParamSchema,
+    body: updateProjectSettingSchema,
+  }),
+  authMiddleware,
+  projectController.updateSettings,
+);
+
+projectRegistry.registerPath({
+  method: 'get',
+  path: '/project/project-settings/{id}',
+  tags: TAGS,
+  request: {
+    params: z.object({ id: z.uuid() }),
+  },
+  responses: createApiResponse(projectSettingSchema, 'Success'),
+});
+
+projectRouter.get(
+  '/project-settings/:id',
+  validate({
+    params: z.object({ id: z.uuid() }),
+  }),
+  authMiddleware,
+  projectController.getSettingsById,
 );

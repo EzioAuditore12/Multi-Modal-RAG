@@ -16,18 +16,16 @@ import {
   type ProjectInsert,
   projectTable,
 } from '@/db/models/project.model';
-import { projectSettingTable } from '@/db/models/project-settings.model';
-import { ProjectFile, projectFileTable } from '@/db/models/project-file.table';
 import {
-  ProjectFileEmbedding,
-  projectFileEmbeddingTable,
-} from '@/db/models/project-file-embedding.model';
+  ProjectSetting,
+  ProjectSettingInsert,
+  projectSettingTable,
+  ProjectSettingUpdate,
+} from '@/db/models/project-settings.model';
+import { ProjectFile, projectFileTable } from '@/db/models/project-file.table';
+import { projectFileEmbeddingTable } from '@/db/models/project-file-embedding.model';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 
-import {
-  googleDocumentEmbeddingModel,
-  googleQueryEmbeddingModel,
-} from '@/ai/models/google.model';
 import { Pagination } from '@/schemas/pagination.schema';
 import { aiService } from './ai.service';
 
@@ -54,6 +52,26 @@ export class ProjectService {
 
       return project;
     });
+  }
+
+  public async updateSettings(
+    id: string,
+    data: Omit<ProjectSettingUpdate, 'id'>,
+  ): Promise<ProjectSetting> {
+    return await this.database
+      .update(this.projectSettingsTable)
+      .set(data)
+      .where(eq(this.projectSettingsTable.id, id))
+      .returning()
+      .then((res) => res[0]);
+  }
+
+  public async getSettings(id: string): Promise<ProjectSetting | undefined> {
+    return await this.database
+      .select()
+      .from(this.projectSettingsTable)
+      .where(eq(this.projectSettingsTable.id, id))
+      .then((res) => res[0] ?? undefined);
   }
 
   public async findById(id: string): Promise<Project | undefined> {
