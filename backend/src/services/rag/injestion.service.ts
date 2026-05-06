@@ -23,6 +23,7 @@ type ContentData = {
   text: string;
   tables: string[];
   images: string[];
+  imageDataUrls: string[];
   types: string[];
 };
 
@@ -92,18 +93,21 @@ export class RagIngestionService {
       // Debug prints
       console.log(`     Types found: ${contentData.types}`);
       console.log(
-        `     Tables: ${contentData.tables.length}, Images: ${contentData.images.length}`,
+        `     Tables: ${contentData.tables.length}, Images: ${contentData.images.length}, LLM images: ${contentData.imageDataUrls.length}`,
       );
 
       let enhancedContent: string;
       // Create AI-enhanced summary if chunk has tables/images
-      if (contentData.tables.length > 0 || contentData.images.length > 0) {
+      if (
+        contentData.tables.length > 0 ||
+        contentData.imageDataUrls.length > 0
+      ) {
         console.log(`     → Creating AI summary for mixed content...`);
         try {
           enhancedContent = (await this.createAiEnhancedSummary(
             contentData.text,
             contentData.tables,
-            contentData.images,
+            contentData.imageDataUrls,
           )) as string;
           console.log(`     → AI summary created successfully`);
           console.log(
@@ -133,6 +137,7 @@ export class RagIngestionService {
       text: chunk.text,
       tables: [],
       images: [],
+      imageDataUrls: [],
       types: ['text'],
     };
 
@@ -157,9 +162,17 @@ export class RagIngestionService {
           if (element?.metadata?.image_base64) {
             contentData.types.push('image');
             try {
-              // Upload image to Cloudinary and store URL
               const base64Data = element.metadata.image_base64;
-              const buffer = Buffer.from(base64Data, 'base64');
+              const imageDataUrl = base64Data.startsWith('data:')
+                ? base64Data
+                : `data:image/jpeg;base64,${base64Data}`;
+
+              contentData.imageDataUrls.push(imageDataUrl);
+
+              const rawBase64 = imageDataUrl.includes(',')
+                ? imageDataUrl.split(',')[1]
+                : base64Data;
+              const buffer = Buffer.from(rawBase64, 'base64');
               const tempPath = `./public/image-${crypto.randomUUID()}.jpg`;
 
               fs.writeFileSync(tempPath, buffer);

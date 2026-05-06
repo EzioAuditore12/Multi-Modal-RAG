@@ -2,7 +2,7 @@ import { and, desc, eq, gt, ilike } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { Chat, ChatInsert, chatTable } from '@/db/models/chat.model';
-import { GetProjectChats } from '@/schemas/chat/get-project-chats';
+import type { GetProjectChats } from '@/schemas/chat/get-project-chats';
 
 export class ChatService {
   private readonly database = db;

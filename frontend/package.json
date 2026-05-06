@@ -15,7 +15,7 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "@tanstack/react-form": "^1.29.1",
     "@tanstack/react-query": "^5.100.9",
-    "ai": "^6.0.174",
+    "ai": "^6.0.175",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -29,7 +29,7 @@
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-speech-recognition": "^4.0.1",
-    "shadcn": "^4.6.0",
+    "shadcn": "^4.7.0",
     "sonner": "^2.0.7",
     "standard-parse": "^0.4.0",
     "streamdown": "^2.5.0",
@@ -38,7 +38,7 @@
     "use-debounce": "^10.1.1",
     "use-stick-to-bottom": "^1.1.4",
     "zod": "^4.4.3",
-    "zustand": "^5.0.12"
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -22,6 +22,8 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string(),
 
+  REDIS_URL: z.string(),
+
   ACCESS_SECRET_KEY: z.string(),
   ACCESS_EXPIRATION_DURATION: z.string().default('5m'),
 
