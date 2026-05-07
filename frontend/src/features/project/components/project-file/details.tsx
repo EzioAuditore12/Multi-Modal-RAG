@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import type { ComponentProps } from 'react';
 import { FileText, FileUp, Link2, ShieldCheck, Sparkles, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
+import { useJoyride } from 'react-joyride';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,8 +15,46 @@ interface ProjectFileDetailsProps extends ComponentProps<'div'> {
   data: ProjectFile;
 }
 
+const steps = [
+  {
+    target: '[data-step="1"]',
+    content:
+      'Here you can find the details of your uploaded file, including its unique ID and the direct URL.',
+    disableBeacon: true,
+  },
+  {
+    target: '[data-step="2"]',
+    content: 'Click here to start a new chat! The AI will use this document as its knowledge base.',
+  },
+];
+
 export function ProjectFileDetails({ className, data, ...props }: ProjectFileDetailsProps) {
   const { fileName, id, uploadedAt, url } = data;
+
+  // Set to true to run the tour immediately when this component mounts
+  // (You could also tie this to a specific state or button click)
+  const [runTour, setRunTour] = useState(true);
+
+  const { on, Tour } = useJoyride({
+    continuous: true,
+    steps,
+    run: runTour,
+    options: {
+      primaryColor: '#10b981', // Matched to the emerald-500 theme of the card
+      backgroundColor: '#fff',
+      textColor: '#0f172a',
+      overlayColor: 'rgba(0, 0, 0, 0.6)',
+      width: 400,
+      zIndex: 1000,
+    },
+  });
+
+  // Clean up tour state when it finishes
+  useEffect(() => {
+    return on('tour:end', () => {
+      setRunTour(false);
+    });
+  }, [on]);
 
   return (
     <div
@@ -23,8 +63,12 @@ export function ProjectFileDetails({ className, data, ...props }: ProjectFileDet
         className
       )}
       {...props}>
+      {/* Mount the Joyride Tour */}
+      {Tour}
+
       <div className="from-primary/10 via-accent/10 to-background pointer-events-none absolute inset-0 bg-linear-to-br" />
       <div className="bg-primary/10 pointer-events-none absolute -top-20 -right-16 h-64 w-64 rounded-full blur-3xl" />
+
       <Card className="border-border/60 relative w-full max-w-4xl overflow-hidden shadow-2xl backdrop-blur">
         <CardHeader className="border-border/60 from-primary/5 border-b bg-linear-to-r via-transparent to-transparent">
           <div className="mb-2 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
@@ -35,8 +79,10 @@ export function ProjectFileDetails({ className, data, ...props }: ProjectFileDet
             This project already has a file attached, so the upload form is hidden.
           </CardDescription>
         </CardHeader>
+
         <CardContent className="grid gap-6 p-6 md:grid-cols-[1.2fr_0.8fr] md:items-start md:p-8">
-          <div className="space-y-4">
+          {/* Step 1 Target: File Details Container */}
+          <div data-step="1" className="space-y-4">
             <div className="border-border/60 bg-muted/40 rounded-2xl border p-4">
               <div className="flex items-start gap-3">
                 <div className="bg-primary/10 text-primary mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
@@ -87,7 +133,9 @@ export function ProjectFileDetails({ className, data, ...props }: ProjectFileDet
                 <span>Upload form stays hidden to avoid duplicate uploads.</span>
               </div>
             </div>
-            <div className="mt-5">
+
+            {/* Step 2 Target: Start New Chat Button */}
+            <div className="mt-5" data-step="2">
               <Link href={`/project/${id}/new-chat`} className="block">
                 <Button className="w-full rounded-full">Start New Chat</Button>
               </Link>

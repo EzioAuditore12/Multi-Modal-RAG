@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export type Tile = {
+  id?: string;
   title: string;
   description: string;
   icon: LucideIcon;
@@ -25,18 +26,22 @@ export type Tile = {
 
 interface HomeTileCardProps extends ComponentProps<typeof Card> {
   data: Tile;
+  isFirstTile?: boolean; // Added this prop
 }
 
-export function HomeTileCard({ className, data, ...props }: HomeTileCardProps) {
+export function HomeTileCard({ className, data, isFirstTile, ...props }: HomeTileCardProps) {
   const { title, bgColor, icon: Icon, href, description, iconColor } = data;
 
   return (
     <Card
       key={title}
+      data-step={isFirstTile ? '1' : undefined} // Target for Step 1
       className={cn('flex flex-col transition-shadow duration-200 hover:shadow-md', className)}
       {...props}>
       <CardHeader>
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg" color={bgColor}>
+        <div
+          className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg"
+          style={{ backgroundColor: bgColor }}>
           <Icon className="h-6 w-6" color={iconColor} />
         </div>
         <CardTitle className="text-xl">{title}</CardTitle>
@@ -47,12 +52,20 @@ export function HomeTileCard({ className, data, ...props }: HomeTileCardProps) {
       </CardContent>
 
       <CardFooter>
-        <Button variant="secondary" className="group w-full">
-          <Link href={href} className="flex w-full items-center justify-center">
-            Get Started
-            <span className="ml-2 transition-transform group-hover:translate-x-1">&rarr;</span>
-          </Link>
-        </Button>
+        <Button
+          variant="secondary"
+          className="group w-full"
+          nativeButton={false}
+          render={
+            <Link
+              href={href}
+              data-step={isFirstTile ? '2' : undefined} // Target for Step 2
+              className="flex w-full items-center justify-center">
+              Get Started
+              <span className="ml-2 transition-transform group-hover:translate-x-1">&rarr;</span>
+            </Link>
+          }
+        />
       </CardFooter>
     </Card>
   );

@@ -2,6 +2,9 @@
 
 import { useParams } from 'next/navigation';
 import { FileText, Sparkles, UploadCloud, ShieldCheck } from 'lucide-react';
+import { useJoyride } from 'react-joyride';
+import { useEffect } from 'react';
+import { useTutorialStore } from '@/store/tutorial';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -13,20 +16,65 @@ import { ProjectFileDetails } from '@/features/project/components/project-file/d
 import { useUploadProjectFile } from '@/features/project/hooks/use-upload-project-file';
 import { useGetProjectFile } from '@/features/project/hooks/use-get-project-file';
 
-export default function ProjectPage() {
+const steps = [
+  {
+    target: '[data-step="feature-cards"]',
+    content:
+      'These cards explain the benefits of uploading a project file: PDF ingestion, semantic search, and protected access.',
+    disableBeacon: true,
+  },
+  {
+    target: '[data-step="upload-form"]',
+    content:
+      'Use this form to upload your project PDF. This will enable advanced retrieval features for your project.',
+  },
+];
+
+export default function ProjectFileUploadPage() {
   const { id } = useParams() as unknown as { id: string };
-
-  const { data, isLoading } = useGetProjectFile(id);
-
+  const { data, isLoading, isRefetching } = useGetProjectFile(id);
   const { mutate, isPending } = useUploadProjectFile();
 
-  if (isLoading)
-    <ProjectFileDetailsLoading className="flex flex-1 items-center justify-center overflow-hidden px-4 py-8" />;
+  // Zustand tutorial store
+  const projectTutorialCompleted = useTutorialStore((state) => state.projectTutorialCompleted);
+  const setProjectTutorialCompleted = useTutorialStore(
+    (state) => state.setProjectTutorialCompleted
+  );
 
-  if (data) return <ProjectFileDetails data={data} />;
+  const { on, Tour } = useJoyride({
+    continuous: true,
+    steps,
+    run: !projectTutorialCompleted, // Directly use derived state
+    options: {
+      primaryColor: '#10b981',
+      backgroundColor: '#fff',
+      textColor: '#0f172a',
+      overlayColor: 'rgba(0, 0, 0, 0.6)',
+      width: 400,
+      zIndex: 1000,
+    },
+  });
+
+  // End tutorial and persist state
+  useEffect(() => {
+    return on('tour:end', () => {
+      setProjectTutorialCompleted(true);
+    });
+  }, [on, setProjectTutorialCompleted]);
+
+  if (isLoading && isRefetching) {
+    return (
+      <ProjectFileDetailsLoading className="flex flex-1 items-center justify-center overflow-hidden px-4 py-8" />
+    );
+  }
+
+  if (data) {
+    return <ProjectFileDetails data={data} />;
+  }
 
   return (
     <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-8">
+      {Tour}
       <div className="from-primary/10 via-secondary/10 to-background pointer-events-none absolute inset-0 bg-linear-to-br" />
       <div className="bg-primary/10 pointer-events-none absolute top-10 -left-16 h-64 w-64 rounded-full blur-3xl" />
       <Card className="border-border/60 relative w-full max-w-2xl overflow-hidden shadow-2xl">
@@ -40,7 +88,7 @@ export default function ProjectPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5 p-6 md:p-8">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div data-step="feature-cards" className="grid gap-3 sm:grid-cols-3">
             <div className="border-border/60 bg-muted/40 rounded-2xl border p-4">
               <FileText className="text-primary mb-3 size-5" />
               <p className="text-sm font-medium">PDF ready</p>
@@ -66,7 +114,9 @@ export default function ProjectPage() {
 
           <Separator />
 
-          <div className="border-border/70 bg-background/70 rounded-2xl border border-dashed p-4 md:p-5">
+          <div
+            data-step="upload-form"
+            className="border-border/70 bg-background/70 rounded-2xl border border-dashed p-4 md:p-5">
             <UploadProjectFileForm
               projectId={id}
               handleFormSubmit={mutate}
