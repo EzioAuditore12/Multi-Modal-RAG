@@ -3,17 +3,14 @@
 import { RegisterForm } from '@/features/auth/register/components/form';
 
 import { useRegisterForm } from '@/features/auth/register/hooks/use-register-form';
+import AuthCard from '@/features/auth/components/auth-card';
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const { mutate, isPending } = useRegisterForm();
 
   return (
-    <div className="flex min-h-screen flex-1 items-center justify-center p-2">
-      <RegisterForm
-        className="w-full max-w-4xl"
-        handleFormSubmit={mutate}
-        isFormSubmitting={isPending}
-      />
-    </div>
+    <AuthCard title="Create an account" subtitle="Join and start building multi-modal projects">
+      <RegisterForm className="w-full" handleFormSubmit={mutate} isFormSubmitting={isPending} />
+    </AuthCard>
   );
 }

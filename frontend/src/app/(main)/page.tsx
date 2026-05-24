@@ -1,6 +1,6 @@
 'use client';
 
-import { Code } from 'lucide-react';
+import { Code, Search, Plus, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { Route } from 'next';
 import { useDebounce } from 'use-debounce';
@@ -117,26 +117,72 @@ export default function HomeScreen() {
         {/* Mount the Joyride Tour */}
         {Tour}
 
-        {/* Header Section */}
-        <HomeHeader className="space-y-2" />
+        {/* Hero */}
+        <section className="from-primary/10 via-accent/5 to-background rounded-3xl bg-gradient-to-r p-8 shadow-lg">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-extrabold">Projects</h1>
+              <p className="text-muted-foreground mt-2">
+                Manage your multi-modal RAG projects and explore results.
+              </p>
 
-        <div className="flex flex-row gap-x-2">
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search through projects..."
-          />
-          <CreateNewProjectForm handleFormSubmit={mutate} isFormSubmitting={isPending} />
-        </div>
+              <div className="mt-4 flex items-center gap-4">
+                <div className="bg-card/60 inline-flex items-center gap-3 rounded-full px-4 py-2">
+                  <span className="text-muted-foreground text-sm">Total projects</span>
+                  <span className="text-lg font-semibold">{flattenedProjects.length}</span>
+                </div>
+                <button
+                  onClick={handleStartTour}
+                  className="bg-primary inline-flex items-center gap-2 rounded-md px-3 py-2 text-white">
+                  <Sparkles className="h-4 w-4" /> Start tour
+                </button>
+              </div>
+            </div>
 
+            <div className="w-full md:w-1/2">
+              <div className="flex gap-3">
+                <div className="bg-card/60 flex-1 rounded-lg p-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-muted rounded-md p-2">
+                      <Search className="text-muted-foreground h-5 w-5" />
+                    </div>
+                    <Input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search through projects..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <CreateNewProjectForm handleFormSubmit={mutate} isFormSubmitting={isPending} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Tiles */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projectTiles.map((tile, i) => (
-            <HomeTileCard
-              key={tile.id || i}
-              data={tile}
-              isFirstTile={i === 0} // Joyride will target the card where this is true
-            />
-          ))}
+          {projectTiles.length === 0 ? (
+            <div className="border-border/60 bg-muted/40 col-span-full rounded-2xl border border-dashed p-8 text-center">
+              <p className="text-xl font-semibold">No projects yet</p>
+              <p className="text-muted-foreground mt-2">
+                Create your first project to get started with multi-modal retrieval.
+              </p>
+              <div className="mt-4">
+                <CreateNewProjectForm handleFormSubmit={mutate} isFormSubmitting={isPending} />
+              </div>
+            </div>
+          ) : (
+            projectTiles.map((tile, i) => (
+              <HomeTileCard
+                key={tile.id || i}
+                data={tile}
+                isFirstTile={i === 0} // Joyride will target the card where this is true
+              />
+            ))
+          )}
         </div>
       </div>
     </>

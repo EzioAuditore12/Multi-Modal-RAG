@@ -36,7 +36,11 @@ export function HomeTileCard({ className, data, isFirstTile, ...props }: HomeTil
     <Card
       key={title}
       data-step={isFirstTile ? '1' : undefined} // Target for Step 1
-      className={cn('flex flex-col transition-shadow duration-200 hover:shadow-md', className)}
+      className={cn(
+        'flex flex-col transition-shadow transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg',
+        'rounded-xl border border-transparent',
+        className
+      )}
       {...props}>
       <CardHeader>
         <div

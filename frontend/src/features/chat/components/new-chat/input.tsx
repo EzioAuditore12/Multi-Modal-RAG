@@ -13,12 +13,16 @@ import { cn } from '@/lib/utils';
 export interface ChatInputAreaProps extends ComponentProps<'form'> {
   onResult: (t: string) => void;
   suggestedText: string;
+  screen?: 'welcome' | 'options' | 'chat';
+  onChangeScreen?: (s: 'welcome' | 'options' | 'chat') => void;
 }
 
 export function ChatInputArea({
   className,
   onResult,
   suggestedText,
+  screen = 'chat',
+  onChangeScreen,
   ...props
 }: ChatInputAreaProps) {
   const { transcript, listening, resetTranscript } = useSpeechRecognition();
@@ -66,20 +70,58 @@ export function ChatInputArea({
         className
       )}
       {...props}>
-      <Field name="inputText">
-        {(field) => {
-          return (
-            <Input
-              type="text"
-              value={field.state.value}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-              placeholder="Type a message or click a suggestion..."
-              className="flex-1 border-none bg-transparent px-4 py-3 text-slate-900 shadow-none outline-none placeholder:text-slate-500 focus-visible:ring-0 dark:text-slate-100"
-            />
-          );
-        }}
-      </Field>
+      <div className="flex w-full flex-col gap-2">
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => onChangeScreen?.(screen === 'options' ? 'chat' : 'options')}
+            className="bg-muted hover:bg-muted/80 rounded-md border border-transparent px-3 py-1 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            Preset options
+          </button>
+        </div>
+
+        {screen === 'options' && (
+          <div className="flex w-full gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setFieldValue(
+                  'inputText',
+                  'Tell me all countries rankings in terms of production in tabular format'
+                )
+              }
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm hover:shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              1. Tell me all countries rankings in terms of production (tabular)
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFieldValue(
+                  'inputText',
+                  'Which algorithm provides the best services for recommendation systems and why?'
+                )
+              }
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm hover:shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              2. Which algorithm provides best services?
+            </button>
+          </div>
+        )}
+
+        <Field name="inputText">
+          {(field) => {
+            return (
+              <Input
+                type="text"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+                placeholder="Type a message or click a suggestion..."
+                className="flex-1 border-none bg-transparent px-4 py-3 text-slate-900 shadow-none outline-none placeholder:text-slate-500 focus-visible:ring-0 dark:text-slate-100"
+              />
+            );
+          }}
+        </Field>
+      </div>
 
       <div className="flex items-center gap-1.5 pr-1">
         <Button
