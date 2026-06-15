@@ -68,7 +68,7 @@ export default function ProjectFileUploadPage() {
     );
   }
 
-  if (data) {
+  if (data && !isPending) {
     return <ProjectFileDetails data={data} />;
   }
 

@@ -15,7 +15,9 @@ export class AuthController {
   ) => {
     const result = await this.authService.register(_req.body);
 
-    return res.status(StatusCodes.CREATED).send(result);
+    this.setAuthCookies(res, result.tokens);
+
+    return res.status(StatusCodes.CREATED).send({ user: result.user });
   };
 
   public login: RequestHandler = async (
@@ -24,19 +26,44 @@ export class AuthController {
   ) => {
     const result = await this.authService.login(_req.body);
 
-    return res.status(StatusCodes.ACCEPTED).send(result);
+    this.setAuthCookies(res, result.tokens);
+
+    return res.status(StatusCodes.ACCEPTED).send({ user: result.user });
   };
 
   public refresh: RequestHandler = async (
     _req: RefreshRequestBody,
     res: Response,
   ) => {
-    const result = await this.authService.refresh(_req.body.refreshToken);
+    // Read refresh token from cookies instead of body!
+    const refreshToken = _req.cookies.refreshToken || _req.body.refreshToken;
+    const tokens = await this.authService.refresh(refreshToken);
 
-    console.log(result);
+    this.setAuthCookies(res, tokens);
 
-    return res.status(StatusCodes.CREATED).send(result);
+    return res.status(StatusCodes.CREATED).send({ success: true });
   };
+
+  private setAuthCookies(
+    res: Response,
+    tokens: { accessToken: string; refreshToken: string },
+  ) {
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+    };
+
+    res.cookie('accessToken', tokens.accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+  }
 }
 
 export const authController = new AuthController();

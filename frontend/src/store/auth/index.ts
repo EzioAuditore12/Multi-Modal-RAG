@@ -7,18 +7,13 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       user: null,
-      tokens: null,
 
       setUserDetails(data) {
         set({ user: data });
       },
 
-      setUserTokens(data) {
-        set({ tokens: data });
-      },
-
       logout: async () => {
-        set({ user: null, tokens: null });
+        set({ user: null });
       },
     }),
     {

@@ -38,12 +38,22 @@ export class RagIngestionService {
 
   private readonly unstructuredClient = unstructuredClient;
 
-  public async processDocuments(filePath: string) {
+  public async processDocuments(
+    filePath: string,
+    onProgress?: (msg: string) => void,
+  ) {
+    if (onProgress)
+      onProgress('Partitioning document and splitting into chunks...');
     const chunks =
       await this.partitianDocumentAndSplitInChunksByTitle(filePath);
 
-    const documents = await this.summarizeChunks(chunks as Chunk[]);
+    if (onProgress)
+      onProgress(
+        `Document split into ${chunks.length} chunks. Starting summarization...`,
+      );
+    const documents = await this.summarizeChunks(chunks as Chunk[], onProgress);
 
+    if (onProgress) onProgress('Document processing complete.');
     return documents;
   }
 
@@ -75,7 +85,10 @@ export class RagIngestionService {
     }
   }
 
-  private async summarizeChunks(chunks: Chunk[]) {
+  private async summarizeChunks(
+    chunks: Chunk[],
+    onProgress?: (msg: string) => void,
+  ) {
     console.log('🧠 Processing chunks with AI Summaries...');
 
     const langchainDocuments: Document[] = [];
@@ -85,7 +98,9 @@ export class RagIngestionService {
     for (let i = 0; i < totalChunks; i++) {
       const chunk = chunks[i];
       const currentChunk = i + 1;
-      console.log(`   Processing chunk ${currentChunk}/${totalChunks}`);
+      const progressMsg = `Processing chunk ${currentChunk}/${totalChunks}`;
+      console.log(`   ${progressMsg}`);
+      if (onProgress) onProgress(progressMsg);
 
       // Analyze chunk content
       const contentData = await this.separateContentTypes(chunk);

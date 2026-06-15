@@ -22,19 +22,18 @@ export function useAuthenticatedServerSideEvents<TEventNames extends string>({
   options,
   events,
 }: AuthServerSideEventOptions<TEventNames>) {
-  const accessToken = useAuthStore((state) => state.tokens?.accessToken);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Automatically inject the Authorization header
+  // Automatically include credentials for HttpOnly cookies
   const mergedOptions = useMemo(() => {
     return {
       ...options,
+      withCredentials: true,
       headers: {
         ...options?.headers,
-        Authorization: `Bearer ${accessToken}`,
       },
     };
-  }, [options, accessToken]);
+  }, [options]);
 
   const sse = useServerSideEvents<TEventNames>({
     url,

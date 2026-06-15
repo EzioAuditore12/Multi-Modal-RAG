@@ -14,11 +14,11 @@ export async function authMiddleware(
   res: Response,
   next: NextFunction,
 ) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer '))
-    throw new UnauthenticatedError('Missing or invalid Authorization header');
+  const token = req.cookies.accessToken;
 
-  const token = authHeader.split(' ')[1];
+  if (!token)
+    throw new UnauthenticatedError('Missing or invalid Authorization token');
+
   const decoded = await jwt.parseAccessToken(token);
 
   if (!decoded) {

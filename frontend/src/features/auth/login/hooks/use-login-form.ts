@@ -7,15 +7,13 @@ import { loginFormApi } from '../api/login.api';
 import { useAuthStore } from '@/store/auth';
 
 export function useLoginForm() {
-  const { setUserDetails, setUserTokens } = useAuthStore();
+  const { setUserDetails } = useAuthStore();
 
   const router = useRouter();
 
   return useMutation({
     mutationFn: loginFormApi,
     onSuccess: (data) => {
-      setUserTokens(data.tokens);
-
       setUserDetails(data.user);
 
       router.replace('/');

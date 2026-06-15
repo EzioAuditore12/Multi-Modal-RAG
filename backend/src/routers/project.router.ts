@@ -105,6 +105,25 @@ projectRouter.get(
 );
 
 projectRegistry.registerPath({
+  method: 'get',
+  path: '/project/project-file/{id}/status',
+  tags: TAGS,
+  request: {
+    params: projectFileParamsSchema,
+  },
+  responses: createApiResponse(z.any(), 'Success'),
+});
+
+projectRouter.get(
+  '/project-file/:id/status',
+  validate({
+    params: projectFileParamsSchema,
+  }),
+  authMiddleware,
+  projectController.getUploadStatus,
+);
+
+projectRegistry.registerPath({
   method: 'post',
   path: '/project/project-file/{id}',
   tags: TAGS,

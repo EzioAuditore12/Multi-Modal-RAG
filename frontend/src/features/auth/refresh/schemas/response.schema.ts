@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { tokensSchema } from '@/features/common/schemas/token.schema';
-
-export const refreshResponseSchema = tokensSchema;
+export const refreshResponseSchema = z.object({
+  success: z.boolean(),
+});
 
 export type RefreshResponse = z.infer<typeof refreshResponseSchema>;

@@ -3,7 +3,9 @@ import fs from 'node:fs';
 import { Response, Request } from 'express';
 import { ConflictError, NotFoundError } from 'express-error-toolkit';
 import { StatusCodes } from 'http-status-codes';
+import { createSession } from 'better-sse';
 
+import { getUploadChannel } from '@/lib/channels/upload-status.channel';
 import { CreateProjectRequest } from '@/schemas/project/create.schema';
 import { projectService } from '@/services/project.service';
 import { ProjectFileRequest } from '@/schemas/project/file/request.schema';
@@ -14,6 +16,26 @@ import { UpdateProjectSettingsRequest } from '@/schemas/project/settings/request
 export class ProjectController {
   private readonly projectService = projectService;
   private readonly ragIngestionService = ragIngestionService;
+
+  public getUploadStatus = async (req: Request, res: Response) => {
+    const projectId = req.params.id as string;
+    const session = await createSession(req, res);
+
+    const isAuthenticedUserAndExisitingProject =
+      await this.projectService.findByIdAndIsAuthenticatedUser(
+        projectId,
+        req.user?.id!,
+      );
+
+    if (!isAuthenticedUserAndExisitingProject) {
+      session.push('Unauthorized', 'error');
+      res.end();
+      return;
+    }
+
+    const channel = getUploadChannel(projectId);
+    channel.register(session);
+  };
 
   public create = async (req: CreateProjectRequest, res: Response) => {
     const userId = req.user?.id!;
@@ -153,13 +175,34 @@ export class ProjectController {
       file,
     );
 
-    const documents = await this.ragIngestionService.processDocuments(
-      file.path,
-    );
+    const channel = getUploadChannel(projectId);
 
-    await this.projectService.createProjectFileEmbeddings(projectId, documents);
+    try {
+      channel.broadcast(
+        'File uploaded successfully. Starting processing...',
+        'status',
+      );
 
-    await fs.promises.unlink(file.path);
+      const documents = await this.ragIngestionService.processDocuments(
+        file.path,
+        (msg) => {
+          channel.broadcast(msg, 'status');
+        },
+      );
+
+      channel.broadcast('Creating embeddings...', 'status');
+      await this.projectService.createProjectFileEmbeddings(
+        projectId,
+        documents,
+      );
+
+      channel.broadcast('Done!', 'status');
+    } catch (error: any) {
+      channel.broadcast(`Error: ${error.message}`, 'error');
+      throw error;
+    } finally {
+      await fs.promises.unlink(file.path);
+    }
 
     return res.status(StatusCodes.CREATED).send(projectFile);
   };

@@ -25,10 +25,10 @@ const envSchema = z.object({
   REDIS_URL: z.string(),
 
   ACCESS_SECRET_KEY: z.string(),
-  ACCESS_EXPIRATION_DURATION: z.string().default('5m'),
+  ACCESS_EXPIRATION_DURATION: z.string().default('15m'),
 
   REFRESH_SECRET_KEY: z.string(),
-  REFRESH_EXPIRATION_DURATION: z.string().default('15m'),
+  REFRESH_EXPIRATION_DURATION: z.string().default('7d'),
 
   GOOGLE_API_KEY: z.string(),
 

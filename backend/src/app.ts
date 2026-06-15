@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express, { type Express } from 'express';
+import cookieParser from 'cookie-parser';
 
 import { healthCheckRouter } from '@/routers/health-check.router';
 import { userRouter } from '@/routers/user.router';
@@ -24,6 +25,7 @@ app.set('trust proxy', true);
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(helmet);
 app.use(rateLimiter);
