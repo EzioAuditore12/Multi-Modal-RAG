@@ -1,5 +1,7 @@
-import { PromptTemplate } from '@langchain/core/prompts';
+import { PromptTemplate, ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+import { RedisChatMessageHistory } from '@langchain/redis';
 import { z } from 'zod';
+import { redisClient } from '@/lib/redis';
 
 import {
   googleDocumentEmbeddingModel,
@@ -67,26 +69,47 @@ export class AiService {
   public async *streamResponse(
     context: string | string[],
     question: string,
+    chatId: string,
   ): AsyncGenerator<string, void, unknown> {
-    const promptTemplate = PromptTemplate.fromTemplate(
-      Array.isArray(context)
-        ? `Given the following context:\n{context}\n\nAnswer the question:\n{question}`
-        : `Given the following context:\n{context}\n\nAnswer the question:\n{question}`,
-    );
+    const promptTemplate = ChatPromptTemplate.fromMessages([
+      [
+        'system',
+        'You are a helpful assistant answering questions based on the provided context.\n\nContext:\n{context}'
+      ],
+      new MessagesPlaceholder('history'),
+      ['human', '{question}']
+    ]);
 
     const contextString = Array.isArray(context) ? context.join('\n') : context;
-    const prompt = await promptTemplate.format({
-      context: contextString,
-      question,
+
+    const chain = promptTemplate.pipe(this.llmModel);
+
+    const chatHistory = new RedisChatMessageHistory({
+      sessionId: chatId,
+      sessionTTL: 3600,
+      client: redisClient,
     });
 
-    const stream = await this.llmModel.stream(prompt);
+    const historyMessages = await chatHistory.getMessages();
+
+    const stream = await chain.stream({
+      context: contextString,
+      question,
+      history: historyMessages,
+    });
+
+    await chatHistory.addUserMessage(question);
+
+    let aiFullResponse = '';
 
     for await (const chunk of stream) {
       if (typeof chunk.content === 'string') {
+        aiFullResponse += chunk.content;
         yield chunk.content;
       }
     }
+
+    await chatHistory.addAIMessage(aiFullResponse);
   }
 }
 

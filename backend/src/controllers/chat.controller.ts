@@ -133,6 +133,7 @@ export class ChatController {
       const stream = this.aiService.streamResponse(
         relevantDocs.map((c) => c.content),
         query,
+        chatId.toString(),
       );
 
       for await (const chunk of stream) {

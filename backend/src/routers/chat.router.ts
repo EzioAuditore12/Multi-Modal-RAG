@@ -21,9 +21,6 @@ chatRegistry.registerPath({
   tags: TAGS,
   request: {
     query: getProjectChatsSchema,
-    headers: z.object({
-      Authorization: z.string().describe('Bearer token for authentication'),
-    }),
   },
   responses: createApiResponse(chatSchema.array(), 'Success'),
 });

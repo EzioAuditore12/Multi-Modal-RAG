@@ -25,6 +25,7 @@ authRegistry.registerPath({
     body: requestBody(registerRequestSchema),
   },
   responses: createApiResponse(registerResponseSchema, 'Success'),
+  security: [],
 });
 
 authRouter.post(
@@ -41,6 +42,7 @@ authRegistry.registerPath({
     body: requestBody(loginRequestSchema),
   },
   responses: createApiResponse(loginResponseSchema, 'Success'),
+  security: [],
 });
 
 authRouter.post(
@@ -57,6 +59,7 @@ authRegistry.registerPath({
     body: requestBody(refreshRequestSchema),
   },
   responses: createApiResponse(tokensSchema, 'Success'),
+  security: [],
 });
 
 authRouter.post(

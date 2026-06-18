@@ -23,6 +23,12 @@ export function generateOpenAPIDocument(): OpenAPIDocument {
     chatRegistry,
     messageRegistry,
   ]);
+  registry.registerComponent('securitySchemes', 'cookieAuth', {
+    type: 'apiKey',
+    in: 'cookie',
+    name: 'accessToken',
+  });
+
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
   return generator.generateDocument({
@@ -31,5 +37,6 @@ export function generateOpenAPIDocument(): OpenAPIDocument {
       version: '1.0.0',
       title: 'Scalar API',
     },
+    security: [{ cookieAuth: [] }],
   });
 }

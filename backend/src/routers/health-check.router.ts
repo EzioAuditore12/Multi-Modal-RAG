@@ -13,6 +13,7 @@ healthCheckRegistry.registerPath({
   path: '/health-check',
   tags: ['Health Check'],
   responses: createApiResponse(z.null(), 'Success'),
+  security: [],
 });
 
 healthCheckRouter.get('/', (_req: Request, res: Response) => {

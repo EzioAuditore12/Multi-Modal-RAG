@@ -8,13 +8,11 @@ import { db } from '@/db';
 import { blackListedRefreshTokenTable } from '@/db/models/blacklist-refresh-token.model';
 import { userService } from './user.service';
 import { cryptoPassword } from '@/utils/crypto-password';
-import { RegisterResponse } from '@/schemas/auth/register/register-response.schema';
 import { RegisterRequest } from '@/schemas/auth/register/register-request.schema';
 import { ServiceResponse } from '@/utils/service-response';
 import { jwt } from '@/utils/jwt';
 import { publicUserSchema } from '@/db/models/user.model';
 import { LoginRequest } from '@/schemas/auth/login/login-request.schema';
-import { LoginResponse } from '@/schemas/auth/login/login-response.schema';
 import { Tokens } from '@/schemas/auth/token.schema';
 import { eq } from 'drizzle-orm'; // Need to import eq
 
@@ -29,7 +27,7 @@ export class AuthService {
 
   public async register(
     registerRequest: RegisterRequest,
-  ): Promise<RegisterResponse> {
+  ) {
     const { email, password, name, avatar } = registerRequest;
 
     const isExistingUser = await this.userService.findByEmail(email);
@@ -57,7 +55,7 @@ export class AuthService {
     };
   }
 
-  public async login(loginRequest: LoginRequest): Promise<LoginResponse> {
+  public async login(loginRequest: LoginRequest) {
     const { email, password } = loginRequest;
 
     const existingUser = await this.userService.findByEmail(email);
